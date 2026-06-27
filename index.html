@@ -1,0 +1,4443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>electroplot — V · I · Q figure studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<!-- electroplot session container: empty by default. When the user saves a session,
+     a NEW copy of this HTML is written with the JSON state embedded inside this
+     element. On load, the script reads it and hydrates the app. -->
+<script id="electroplot-saved-state" type="application/json">{}</script>
+<style>
+  :root {
+    --bg:           #14110f;
+    --bg-grad-1:    #1c1815;
+    --bg-grad-2:    #100d0b;
+    --surface:      #1c1916;
+    --surface-2:    #221e1a;
+    --surface-3:    #2a2622;
+    --border:       #2e2926;
+    --border-2:     #3a342f;
+    --text:         #ece6dd;
+    --text-2:       #b8ada0;
+    --text-3:       #7a7165;
+    --text-4:       #524a42;
+    --accent:       #d4a574;
+    --accent-2:     #c4915f;
+    --accent-bg:    rgba(212,165,116,.10);
+    --sage:         #7ba89c;
+    --sage-bg:      rgba(123,168,156,.10);
+    --danger:       #c46a5a;
+    --shadow-sm:    0 2px 6px rgba(0,0,0,.30);
+    --shadow:       0 8px 24px rgba(0,0,0,.35);
+    --V: #d4a574;
+    --I: #7ba89c;
+    --Q: #b89bce;
+  }
+  html[data-theme="light"] {
+    --bg:           #f4ede2;
+    --bg-grad-1:    #f8f1e6;
+    --bg-grad-2:    #ebe2d4;
+    --surface:      #faf4e9;
+    --surface-2:    #f2ead9;
+    --surface-3:    #e8dfcb;
+    --border:       #d8cdb6;
+    --border-2:     #c3b699;
+    --text:         #2b2520;
+    --text-2:       #574f44;
+    --text-3:       #847b6c;
+    --text-4:       #a89e8b;
+    --accent:       #9c6d3e;
+    --accent-2:     #7e562d;
+    --accent-bg:    rgba(156,109,62,.10);
+    --sage:         #4f7d70;
+    --sage-bg:      rgba(79,125,112,.10);
+    --danger:       #a14a3b;
+    --shadow-sm:    0 2px 4px rgba(60,40,20,.08);
+    --shadow:       0 4px 14px rgba(60,40,20,.10);
+    --V: #9c6d3e;
+    --I: #4f7d70;
+    --Q: #7a5d92;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 60% 50% at 15% 0%, var(--bg-grad-1), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 100% 100%, var(--bg-grad-2), transparent 65%);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.app-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: linear-gradient(to bottom, var(--bg) 70%, transparent);
+    backdrop-filter: blur(6px);
+  }
+  .brand h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 24px;
+    margin: 0;
+    letter-spacing: -.01em;
+    color: var(--text);
+  }
+  .brand h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+  .brand .subtitle { font-size: 11px; color: var(--text-3); margin-top: 2px; letter-spacing: .02em; }
+  .header-actions { display: flex; gap: 6px; align-items: center; }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: all .15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { color: var(--text); border-color: var(--border-2); background: var(--surface-2); }
+  .btn.primary { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+  .btn.primary:hover { background: var(--accent); color: var(--bg); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .btn.danger:hover { background: var(--danger); color: var(--bg); }
+  .btn.icon { padding: 6px 8px; min-width: 28px; justify-content: center; }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  .main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 22px;
+    padding: 22px 28px 60px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: static !important; max-height: none !important; }
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 14px;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-title .sym { color: var(--accent); margin-right: 4px; }
+  .card-title em { font-style: italic; color: var(--accent); }
+
+  /* quantity tabs */
+  .qty-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .qty-tab {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    font-size: 10.5px;
+    color: var(--text-3);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .qty-tab .qty-sym {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    margin-bottom: 2px;
+    color: var(--text-2);
+  }
+  .qty-tab:hover { border-color: var(--border-2); color: var(--text-2); }
+  .qty-tab[data-qty="V"].active { background: rgba(212,165,116,.13); border-color: var(--V); color: var(--V); }
+  .qty-tab[data-qty="V"].active .qty-sym { color: var(--V); }
+  .qty-tab[data-qty="I"].active { background: rgba(123,168,156,.13); border-color: var(--I); color: var(--I); }
+  .qty-tab[data-qty="I"].active .qty-sym { color: var(--I); }
+  .qty-tab[data-qty="Q"].active { background: rgba(184,155,206,.13); border-color: var(--Q); color: var(--Q); }
+  .qty-tab[data-qty="Q"].active .qty-sym { color: var(--Q); }
+
+  /* dropzone */
+  .dropzone {
+    border: 1.5px dashed var(--border-2);
+    border-radius: 10px;
+    padding: 22px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    background: var(--surface-2);
+  }
+  .dropzone:hover, .dropzone.over { border-color: var(--accent); background: var(--accent-bg); }
+  .dropzone .glyph { font-size: 22px; color: var(--accent); margin-bottom: 4px; }
+  .dropzone .label { font-size: 12px; color: var(--text-2); }
+  .dropzone .hint { font-size: 10.5px; color: var(--text-3); margin-top: 4px; }
+
+  /* default unit picker */
+  .unit-pick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+    align-items: center;
+  }
+  .unit-pick .label-mini { font-size: 10.5px; color: var(--text-3); margin-right: 4px; }
+  .unit-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    padding: 3px 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .unit-chip:hover { color: var(--text); border-color: var(--border-2); }
+  .unit-chip.on {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+
+  /* samples */
+  .samples-list { display: flex; flex-direction: column; gap: 6px; }
+  .sample-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 9px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: all .12s;
+    cursor: pointer;
+  }
+  .sample-row:hover { border-color: var(--border-2); background: var(--surface-3); }
+  .sample-row.active { border-color: var(--accent); background: var(--accent-bg); }
+  .sample-color {
+    width: 14px; height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,.2);
+  }
+  .sample-name {
+    font-size: 12px; color: var(--text); flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    background: transparent; border: none; outline: none;
+    font-family: 'JetBrains Mono', monospace; padding: 2px 0;
+  }
+  .sample-name:focus { background: var(--surface); border-bottom: 1px solid var(--accent); }
+  .sample-count {
+    font-size: 10px; color: var(--text-3); background: var(--surface-3);
+    padding: 1px 6px; border-radius: 4px; font-variant-numeric: tabular-nums;
+  }
+  .sample-vis {
+    background: transparent; border: none; color: var(--text-3);
+    cursor: pointer; font-size: 12px; padding: 0 2px;
+  }
+  .sample-vis.on { color: var(--accent); }
+  .sample-del {
+    background: transparent; border: none; color: var(--text-4);
+    cursor: pointer; font-size: 13px; padding: 0 2px;
+  }
+  .sample-del:hover { color: var(--danger); }
+
+  .color-pop {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    width: 240px;
+    box-shadow: var(--shadow); z-index: 80;
+    font-size: 11px;
+  }
+  .color-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+  }
+  .color-swatch {
+    width: 22px; height: 22px; border-radius: 5px; cursor: pointer;
+    border: 1px solid rgba(0,0,0,.2); transition: transform .1s;
+  }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.selected { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--text); }
+  /* free RGB row */
+  .color-free-row, .color-alpha-row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .color-free-label {
+    flex: 0 0 60px; color: var(--text-3); font-size: 10.5px;
+  }
+  .color-free {
+    width: 32px; height: 26px; padding: 0;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer;
+  }
+  .color-hex {
+    flex: 1; min-width: 0;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 3px 6px;
+    color: var(--text); font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+  }
+  .color-hex:focus { outline: none; border-color: var(--accent); }
+  .color-alpha { flex: 1; min-width: 0; }
+  .color-alpha-val {
+    flex: 0 0 36px; text-align: right; color: var(--text-2);
+    font-variant-numeric: tabular-nums; font-size: 10.5px;
+  }
+  /* preview with checkerboard so transparency is visible */
+  .color-preview {
+    height: 22px; border-radius: 4px;
+    border: 1px solid var(--border);
+    background-image:
+      linear-gradient(45deg, #555 25%, transparent 25%),
+      linear-gradient(-45deg, #555 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #555 75%),
+      linear-gradient(-45deg, transparent 75%, #555 75%);
+    background-size: 10px 10px;
+    background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+    /* the chosen color is applied via inline style on top of this checkerboard */
+  }
+
+  /* files under sample */
+  .sample-files {
+    margin-left: 22px; margin-top: -2px; margin-bottom: 4px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .sample-file {
+    display: flex; align-items: flex-start; gap: 5px;
+    font-size: 10.5px; color: var(--text-3);
+    padding: 5px 6px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 5px;
+    flex-wrap: wrap;
+  }
+  .file-tag {
+    font-size: 9.5px; padding: 1px 5px;
+    background: var(--surface-3); border-radius: 3px;
+    text-transform: uppercase; letter-spacing: .05em;
+    font-weight: 500; flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .file-tag.V { color: var(--V); background: rgba(212,165,116,.14); }
+  .file-tag.I { color: var(--I); background: rgba(123,168,156,.14); }
+  .file-tag.Q { color: var(--Q); background: rgba(184,155,206,.14); }
+  /* file-name is a textarea that wraps to multiple lines so long filenames
+     are fully visible. Auto-resized in JS to fit content. */
+  .file-name {
+    flex: 1 1 140px; min-width: 100px;
+    background: transparent; border: 1px solid transparent;
+    outline: none;
+    color: var(--text-2); font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; line-height: 1.35;
+    padding: 2px 4px; border-radius: 3px;
+    resize: none; overflow: hidden;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .file-name:hover { background: var(--surface); border-color: var(--border); }
+  .file-name:focus { color: var(--text); background: var(--surface); border-color: var(--accent); }
+  .file-unit {
+    background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-2); border-radius: 4px; padding: 1px 3px;
+    font-size: 10px; font-family: 'JetBrains Mono', monospace;
+    width: 48px; text-align: center;
+  }
+  .file-unit:focus { outline: none; border-color: var(--accent); color: var(--text); }
+  .file-unit-sel {
+    max-width: 56px !important;
+    padding: 1px 3px !important;
+    font-size: 10px !important;
+  }
+  .file-col {
+    max-width: 90px;
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+  .file-invert {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all .12s;
+    line-height: 1.2;
+  }
+  .file-invert:hover { color: var(--text); border-color: var(--border-2); }
+  .file-invert.on {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .file-type-mini { display: flex; gap: 2px; }
+  .file-type-mini button {
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-3); font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; padding: 1px 4px; border-radius: 3px; cursor: pointer;
+  }
+  .file-type-mini button[data-t="V"].on { color: var(--V); border-color: var(--V); background: rgba(212,165,116,.12); }
+  .file-type-mini button[data-t="I"].on { color: var(--I); border-color: var(--I); background: rgba(123,168,156,.12); }
+  .file-type-mini button[data-t="Q"].on { color: var(--Q); border-color: var(--Q); background: rgba(184,155,206,.12); }
+  .file-x {
+    background: transparent; border: none; color: var(--text-4);
+    cursor: pointer; font-size: 11px; padding: 0 2px;
+  }
+  .file-x:hover { color: var(--danger); }
+
+  /* plot area */
+  .plots { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .plot-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .plot-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; gap: 12px; flex-wrap: wrap;
+  }
+  .plot-title {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: 15px; margin: 0; color: var(--text);
+  }
+  .plot-title em { font-style: italic; color: var(--accent); }
+  .plot-title .badge {
+    display: inline-block; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+    vertical-align: middle; font-weight: 500;
+  }
+  .plot-title .badge.V { color: var(--V); background: rgba(212,165,116,.14); }
+  .plot-title .badge.I { color: var(--I); background: rgba(123,168,156,.14); }
+  .plot-title .badge.Q { color: var(--Q); background: rgba(184,155,206,.14); }
+  .plot-toolbar { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+
+  .time-controls {
+    display: flex; flex-direction: column; gap: 8px;
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 10.5px;
+  }
+  .tc-row1 {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .tc-row2 {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .tc-label { color: var(--text-2); font-weight: 500; letter-spacing: .02em; }
+  .tc-mini-label { color: var(--text-3); font-size: 10px; }
+  .tc-dash { color: var(--text-3); margin: 0 -2px; font-size: 12px; }
+  .tc-unit { color: var(--text-3); font-size: 10px; margin-left: -2px; }
+  .tc-inputs {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .tc-input {
+    font-family: 'JetBrains Mono', monospace;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 2px 3px;
+    font-size: 10.5px;
+    width: 72px;
+    font-variant-numeric: tabular-nums;
+  }
+  .tc-input:focus { outline: none; color: var(--accent); }
+  .tc-input::-webkit-outer-spin-button,
+  .tc-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .tc-input { -moz-appearance: textfield; }
+  .tc-hint { color: var(--text-3); font-size: 10px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* dual-handle range slider for visual time selection.
+     IMPORTANT: we deliberately do NOT use a separate floating .rs-track div
+     anymore — having a sibling div overlapping the inputs was causing the
+     line to render on top of the thumb in some browsers. Instead, each
+     range input draws its OWN native track (::-webkit-slider-runnable-track
+     / ::-moz-range-track). The browser then guarantees the thumb is on top
+     of its own track. The two inputs overlap, so their tracks visually merge
+     into one continuous line, with two thumbs on top.
+     The .rs-track and .rs-range divs in the markup are kept for back-compat
+     but hidden — JS still pokes them harmlessly. */
+  .range-slider {
+    position: relative;
+    flex: 1; min-width: 120px;
+    height: 28px;
+    display: flex; align-items: center;
+  }
+  .rs-track, .rs-range { display: none; }
+
+  .rs-input {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 28px;
+    -webkit-appearance: none; appearance: none;
+    background: transparent;
+    pointer-events: none;
+    margin: 0;
+    outline: none;
+  }
+  /* webkit / blink */
+  .rs-input::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px;
+    margin-top: -7px;            /* center 18px thumb on 4px track */
+    background: var(--accent);
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: grab;
+    box-shadow: 0 2px 5px rgba(0,0,0,.45);
+  }
+  .rs-input::-webkit-slider-thumb:active { cursor: grabbing; }
+  /* firefox */
+  .rs-input::-moz-range-thumb {
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: grab;
+    box-shadow: 0 2px 5px rgba(0,0,0,.45);
+  }
+  .rs-input::-moz-range-thumb:active { cursor: grabbing; }
+  /* The visible track is rendered by rs-hi (the LOWER-z-index input). rs-lo,
+     which sits ON TOP for grabbability, has a transparent track. This way:
+       • lo's thumb (left ball)  → on top of hi's visible track ✓
+       • hi's thumb (right ball) → on top of its OWN visible track ✓
+     If we put the track on lo instead, lo's track would sit in front of
+     hi's thumb (because lo has higher z-index) → the right ball appears
+     "behind the line". */
+  .rs-lo::-webkit-slider-runnable-track { background: transparent; }
+  .rs-lo::-moz-range-track             { background: transparent; }
+  .rs-hi::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--surface-3);
+    border: none;
+    border-radius: 2px;
+  }
+  .rs-hi::-moz-range-track {
+    height: 4px;
+    background: var(--surface-3);
+    border: none;
+    border-radius: 2px;
+  }
+  /* stacking — rs-lo on top so its thumb stays grabbable when both are at the
+     same position; rs-hi underneath, drawing the visible line. */
+  .rs-hi { z-index: 2; }
+  .rs-lo { z-index: 3; }
+
+  /* drag-to-move file rows between samples */
+  .sample-file[draggable="true"] { cursor: grab; }
+  .sample-file[draggable="true"]:active { cursor: grabbing; }
+  .sample-file.dragging { opacity: .35; }
+  .sample-wrap.drop-target,
+  .sample-wrap.drop-target .sample-row {
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+    background: var(--accent-bg);
+  }
+  .file-drag-handle {
+    color: var(--text-4); font-size: 11px; cursor: grab;
+    padding: 0 2px;
+    user-select: none;
+  }
+  .file-drag-handle:hover { color: var(--accent); }
+  /* drag handle aligns with the top of the file row even when file name wraps */
+  .sample-file .file-drag-handle { margin-top: 3px; }
+
+  /* CSV / sum buttons sit next to the download icon */
+  .csv-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: .04em;
+    padding: 0 6px;
+    min-width: 28px;
+  }
+
+  /* sample drag handle on the left of each sample row */
+  .sample-drag-handle {
+    color: var(--text-4); font-size: 12px;
+    cursor: grab; user-select: none;
+    padding: 0 2px;
+    margin-right: 2px;
+  }
+  .sample-drag-handle:hover { color: var(--accent); }
+  .sample-drag-handle:active { cursor: grabbing; }
+  /* indicator strip when a sample is being dragged over another (reorder) */
+  .sample-wrap.reorder-target-before > .sample-row {
+    box-shadow: 0 -3px 0 0 var(--accent);
+  }
+  .sample-wrap.reorder-target-after > .sample-row {
+    box-shadow: 0 3px 0 0 var(--accent);
+  }
+
+  /* comparison-card size sliders: keep compact in the controls row */
+  #cmpBarW, #cmpMkS { width: 90px; }
+  #cmpBarWv, #cmpMkSv { display: inline-block; min-width: 26px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Saved-session confirm modal — shown when an HTML session file is dropped
+     into an app that already has samples (replace / merge / cancel). */
+  .session-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .session-modal {
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: 14px;
+    padding: 22px 24px;
+    width: min(420px, 92vw);
+    box-shadow: var(--shadow);
+    color: var(--text);
+  }
+  .session-modal h3 { margin: 0 0 6px; font-family: 'Fraunces', serif; font-weight: 500; }
+  .session-modal p { margin: 4px 0 0; font-size: 12px; color: var(--text-2); }
+  .session-modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .session-modal-actions .btn { flex: 1; }
+
+  /* Sample-legend card: sticky in the top-right corner on wide screens so it
+     stays visible as the user scrolls through the V / I / Q / comparison cards.
+     Falls back to normal in-flow on narrower screens where there isn't room. */
+  @media (min-width: 1100px) {
+    .plot-card.legend-card-fixed {
+      position: fixed;
+      top: 86px;
+      right: 28px;
+      width: 280px;
+      max-width: 28vw !important;
+      z-index: 50;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow, 0 6px 22px rgba(0,0,0,.35));
+    }
+    /* Reserve a strip on the right of the plot column so wider plot cards
+       don't slide behind the floating legend. */
+    .plots.has-sticky-legend { padding-right: 320px; }
+  }
+
+  .select-mini {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    border-radius: 6px; padding: 5px 7px;
+    font-size: 10.5px; cursor: pointer;
+  }
+  .select-mini:hover { color: var(--text); border-color: var(--border-2); }
+  .select-mini:focus { outline: none; border-color: var(--accent); }
+
+  .seg {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden;
+  }
+  .seg button {
+    background: transparent; border: none; color: var(--text-3);
+    padding: 5px 10px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; cursor: pointer;
+    border-right: 1px solid var(--border);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button:hover { color: var(--text); background: var(--surface-3); }
+  .seg button.on { color: var(--accent); background: var(--accent-bg); }
+
+  .plot-body { width: 100%; min-height: 180px; }
+
+  /* font popover */
+  .font-pop {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    z-index: 40;
+    min-width: 230px;
+  }
+  .font-pop h4 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    margin: 0 0 10px; font-size: 12px; color: var(--text);
+  }
+  .slider-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .slider-row label {
+    display: flex; justify-content: space-between;
+    font-size: 10.5px; color: var(--text-3);
+  }
+  .slider-row label span { color: var(--accent); font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    width: 100%; -webkit-appearance: none; background: transparent; height: 18px;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 3px; background: var(--border-2); border-radius: 2px;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 3px; background: var(--border-2); border-radius: 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px;
+    background: var(--accent); border-radius: 50%;
+    margin-top: -4.5px; border: none; cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px; background: var(--accent);
+    border-radius: 50%; border: none; cursor: pointer;
+  }
+
+  /* stat cells */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px; margin-top: 12px;
+  }
+  .stat-cell {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px;
+    border-left-width: 2px;
+  }
+  .stat-cell .k {
+    font-size: 9.5px; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: .06em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .stat-row {
+    display: flex; justify-content: space-between; gap: 4px;
+    font-size: 11px; margin-top: 2px;
+  }
+  .stat-row .lbl { color: var(--text-3); }
+  .stat-row .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .stat-row .val em { font-style: normal; color: var(--text-3); font-size: 10px; margin-left: 2px; }
+
+  /* comparison card */
+  .compare-controls {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .compare-controls .field {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: var(--text-3);
+  }
+  .cmp-block {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .cmp-block-row {
+    flex-direction: row; flex-wrap: wrap; gap: 12px; align-items: center;
+  }
+  .cmp-block-label {
+    font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  /* dynamic series rows */
+  .cmp-series-list {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .cmp-series-row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cmp-series-tag {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 22px; border-radius: 4px;
+    background: var(--tag-color, var(--surface-3));
+    color: #fff; font-size: 10.5px; font-weight: 600;
+    border: 1px solid rgba(0,0,0,.18);
+  }
+  .cmp-q, .cmp-m { min-width: 0; }
+  .cmp-q { flex: 0 0 70px; }
+  .cmp-m { flex: 1; max-width: 200px; }
+  .cmp-series-x {
+    width: 22px; height: 22px;
+    background: var(--surface); color: var(--text-3);
+    border: 1px solid var(--border); border-radius: 4px;
+    cursor: pointer; font-size: 13px; line-height: 1;
+  }
+  .cmp-series-x:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+  .cmp-series-x:disabled { opacity: .35; cursor: not-allowed; }
+  .cmp-series-add {
+    align-self: flex-start;
+    padding: 4px 10px; font-size: 10.5px;
+  }
+  .cmp-series-add:disabled { opacity: .35; cursor: not-allowed; }
+  /* sample pills (per-card show/hide) */
+  .cmp-sample-pills {
+    display: flex; flex-wrap: wrap; gap: 5px;
+  }
+  .cmp-pill {
+    padding: 3px 9px; font-size: 10.5px;
+    background: var(--surface-3); color: var(--text-3);
+    border: 1px solid var(--border); border-radius: 99px;
+    cursor: pointer; transition: all .12s;
+    position: relative;
+  }
+  .cmp-pill::before {
+    content: ''; display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--pill-color, var(--accent));
+    margin-right: 6px; vertical-align: middle;
+    opacity: .35;
+  }
+  .cmp-pill.on {
+    background: var(--surface); color: var(--text);
+    border-color: var(--pill-color, var(--accent));
+  }
+  .cmp-pill.on::before { opacity: 1; }
+  .cmp-pill:hover { transform: translateY(-1px); }
+  /* chart-type button: greyed out when bar is invalid (multi-series) */
+  #cmpChart button.disabled { opacity: .35; cursor: not-allowed; }
+
+  /* toggle */
+  .toggle {
+    position: relative; width: 34px; height: 18px;
+    background: var(--surface-3); border-radius: 10px;
+    cursor: pointer; border: 1px solid var(--border);
+    transition: all .15s; flex-shrink: 0;
+  }
+  .toggle:after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--text-3); transition: all .15s;
+  }
+  .toggle.on { background: var(--accent-bg); border-color: var(--accent); }
+  .toggle.on:after { left: 18px; background: var(--accent); }
+
+  /* form rows */
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .row label { font-size: 11px; color: var(--text-3); flex-shrink: 0; min-width: 88px; }
+  .row .muted { color: var(--text-3); font-size: 10.5px; }
+
+  /* empty */
+  .empty {
+    text-align: center; padding: 70px 20px; color: var(--text-3);
+  }
+  .empty .glyph { font-size: 36px; color: var(--accent); margin-bottom: 12px; opacity: .5; }
+  .empty h3 {
+    font-family: 'Fraunces', serif; font-weight: 500; font-style: italic;
+    color: var(--text-2); font-size: 16px; margin: 0 0 6px;
+  }
+  .empty p { font-size: 11.5px; margin: 0 auto; max-width: 420px; line-height: 1.7; }
+
+  /* toasts */
+  .toast-wrap {
+    position: fixed; bottom: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 100; pointer-events: none;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px; font-size: 11.5px;
+    box-shadow: var(--shadow);
+    animation: slideUp .25s ease-out;
+    border-left: 3px solid var(--accent);
+    max-width: 320px;
+  }
+  .toast.danger { border-color: var(--danger); border-left-color: var(--danger); }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .muted { color: var(--text-3); font-size: 10.5px; }
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<header class="app-bar">
+  <div class="brand">
+    <h1>electro<em>plot</em></h1>
+    <div class="subtitle" data-i18n="subtitle">voltage · current · charge — drop, plot, compare</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn icon" id="themeToggle" title="theme">◐</button>
+    <button class="btn icon" id="langToggle" title="language">EN</button>
+    <button class="btn" id="saveSession" data-i18n="save_session" title="save the current samples + per-card settings as a re-openable HTML">⤓ session</button>
+    <button class="btn" id="exportAllCsv" data-i18n="export_csv">⇣ CSV</button>
+    <button class="btn danger" id="resetAll" data-i18n="reset">⊗ reset</button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+
+    <!-- UPLOAD CARD -->
+    <div class="card">
+      <h3 class="card-title"><span><span class="sym">⌁</span><span data-i18n="upload_title">file <em>intake</em></span></span></h3>
+
+      <div class="muted" style="margin-bottom:6px;" data-i18n="upload_step1">① pick what these files contain:</div>
+      <div class="qty-tabs" id="qtyTabs">
+        <div class="qty-tab active" data-qty="V">
+          <span class="qty-sym">V</span><span data-i18n="qty_voltage">voltage</span>
+        </div>
+        <div class="qty-tab" data-qty="I">
+          <span class="qty-sym">I</span><span data-i18n="qty_current">current</span>
+        </div>
+        <div class="qty-tab" data-qty="Q">
+          <span class="qty-sym">Q</span><span data-i18n="qty_charge">charge</span>
+        </div>
+      </div>
+
+      <div class="muted" style="margin:10px 0 6px;" data-i18n="upload_step2">② drop files — unit is auto-detected, editable per file:</div>
+      <div class="dropzone" id="dropzone">
+        <div class="glyph">⇣</div>
+        <div class="label" data-i18n="drop_label">drop .csv / .txt / .dat</div>
+        <div class="hint" data-i18n="drop_hint">attaches to active sample</div>
+        <input type="file" id="fileInput" multiple accept=".csv,.txt,.dat,.tsv" style="display:none">
+      </div>
+    </div>
+
+    <!-- SAMPLES CARD -->
+    <div class="card">
+      <h3 class="card-title">
+        <span><span class="sym">●</span><span data-i18n="samples_title"><em>samples</em></span></span>
+        <button class="btn icon" id="addSample" title="add sample">+</button>
+      </h3>
+      <div class="samples-list" id="samplesList"></div>
+    </div>
+
+    <!-- DISPLAY CARD -->
+    <div class="card">
+      <h3 class="card-title"><span><span class="sym">⊕</span><span data-i18n="display_title">display <em>options</em></span></span></h3>
+      <div class="row">
+        <label data-i18n="plot_size">plot size</label>
+        <input type="range" min="0.3" max="1.2" step="0.05" value="0.55" id="plotScale">
+        <span class="muted" style="width:36px; text-align:right;" id="plotScaleV">55%</span>
+      </div>
+      <div class="row">
+        <label data-i18n="line_thickness">line width</label>
+        <input type="range" min="0.5" max="6" step="0.1" value="2.4" id="lineWidth">
+        <span class="muted" style="width:32px; text-align:right;" id="lineWidthV">2.4</span>
+      </div>
+      <div class="row">
+        <label data-i18n="show_grid">grid</label>
+        <div class="toggle" id="showGrid"></div>
+        <span style="flex:1"></span>
+        <label style="min-width:auto" data-i18n="show_axes">axes</label>
+        <div class="toggle on" id="showAxes"></div>
+      </div>
+      <div class="row">
+        <label data-i18n="show_mirror">mirror</label>
+        <div class="toggle on" id="showMirror" title="4-sided box frame (top/right axis rules)"></div>
+        <span class="muted" data-i18n="mirror_hint">top &amp; right rules</span>
+      </div>
+      <div class="row">
+        <label data-i18n="smooth">smooth</label>
+        <div class="toggle" id="smoothLines"></div>
+        <span class="muted" data-i18n="smooth_hint">spline interpolation</span>
+      </div>
+      <div class="row">
+        <label data-i18n="bare_bg">bare bg</label>
+        <div class="toggle" id="bareBg" title="transparent plot background"></div>
+        <span class="muted" data-i18n="bare_bg_hint">transparent (for overlay)</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="plots" id="plotsHost">
+    <div class="card empty" id="emptyState">
+      <div class="glyph">⌁</div>
+      <h3 data-i18n="empty_title">no <em>signals</em> yet</h3>
+      <p data-i18n="empty_body">create a sample → pick the quantity (V / I / Q) and default unit → drop your files. Each quantity gets its own plot card. Bottom card lets you compare peak / RMS / mean across samples.</p>
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ───────────────────────── i18n ───────────────────────── */
+const STRINGS = {
+  en: {
+    subtitle: "voltage · current · charge — drop, plot, compare",
+    upload_title: "file intake",
+    upload_step1: "① fallback quantity (filenames with 'vol' / 'curr' / 'cha' auto-detect):",
+    upload_step2: "② drop files — unit & type auto-detected from filename, editable per file:",
+    qty_voltage: "voltage", qty_current: "current", qty_charge: "charge",
+    drop_label: "drop .csv / .txt / .dat",
+    drop_hint: "attaches to active sample",
+    samples_title: "samples",
+    display_title: "display options",
+    line_thickness: "line width",
+    bare_bg: "bare bg",
+    bare_bg_hint: "transparent (for overlay)",
+    show_grid: "grid", show_axes: "axes",
+    show_mirror: "mirror", mirror_hint: "top & right rules",
+    smooth: "smooth", smooth_hint: "spline interpolation",
+    export_csv: "⇣ CSV", reset: "⊗ reset",
+    empty_title: "no signals yet",
+    empty_body: "create a sample → pick the quantity (V / I / Q) and default unit → drop your files. Each quantity gets its own plot card. Bottom card lets you compare peak / RMS / mean across samples.",
+    plot_voltage: "voltage", plot_current: "current", plot_charge: "charge",
+    vs_time: "vs time",
+    overlay: "overlay", side_by_side: "side-by-side",
+    view: "view", aspect: "aspect", fonts: "fonts", format: "format", download: "download",
+    display_unit: "display unit",
+    time_window: "time range",
+    custom: "custom",
+    start: "start",
+    end: "end",
+    all: "all",
+    axis_title: "axis title", tick_label: "tick label", legend: "legend",
+    csv_data: "data CSV (currently shown)",
+    csv_stats: "stats CSV (peak / RMS / mean …)",
+    save_session: "⤓ session",
+    any_color: "any color",
+    opacity: "opacity",
+    bar_width: "bar width",
+    marker_size: "marker size",
+    legend_title: "sample legend",
+    plot_size: "plot size",
+    apply_all: "close",
+    sample: "sample",
+    compare_title: "peak / RMS comparison",
+    metric: "metric", chart: "chart", grouping: "grouping", yscale: "y-axis",
+    quantity: "quantity",
+    bar: "bar", scatter: "scatter", line_markers: "line+markers", line: "line",
+    series: "series", add_series: "add series", samples: "samples",
+    no_samples: "(no samples yet)", remove: "remove",
+    individual: "per file", grouped: "group by prefix",
+    linear: "linear", log: "log",
+    max_peak: "max |peak|",
+    mean_peak: "mean peak amplitude",
+    peak_to_peak: "peak-to-peak",
+    rms: "RMS", mean: "mean", std: "std", max: "max", min: "min",
+    no_files_msg: "no files for this quantity yet",
+    no_compare_msg: "no data — upload some files first",
+    confirm_reset: "clear everything?",
+    csv_exported: "CSV exported",
+    plot_exported: "plot exported",
+    no_data: "no data to export",
+    sample_added: "sample added",
+    files_loaded: "{n} file(s) loaded",
+    parse_fail: "could not parse {f}",
+    duration: "duration", points: "points",
+    dual_yaxis_title: "V & I overlay (dual axis)",
+    dual_pick_sample: "pick sample:",
+    dual_hint: "draws V and I from the same sample on one plot with two y-axes",
+    nfiles: "{n} files",
+    peaks_detected: "{n} peaks",
+  },
+  ko: {
+    subtitle: "전압 · 전류 · 전하 — 드롭, 플롯, 비교",
+    upload_title: "파일 입력",
+    upload_step1: "① 기본 측정량 (파일명에 vol/curr/cha 포함시 자동 감지):",
+    upload_step2: "② 파일 드롭 — 파일명에서 단위/측정량 자동 감지, 수정 가능:",
+    qty_voltage: "전압", qty_current: "전류", qty_charge: "전하",
+    drop_label: ".csv / .txt / .dat 드롭",
+    drop_hint: "선택된 샘플로 추가됨",
+    samples_title: "샘플",
+    display_title: "표시 옵션",
+    line_thickness: "선 굵기",
+    bare_bg: "투명 배경", bare_bg_hint: "오버레이용 투명",
+    show_grid: "격자", show_axes: "축",
+    show_mirror: "박스", mirror_hint: "상단&우측 축",
+    smooth: "스무딩", smooth_hint: "스플라인 보간",
+    export_csv: "⇣ CSV", reset: "⊗ 초기화",
+    empty_title: "신호 없음",
+    empty_body: "샘플 생성 → 측정량(V/I/Q)과 기본 단위 선택 → 파일 드롭. 각 측정량마다 플롯 카드가 생기고, 하단 카드에서 샘플 간 피크/RMS/평균 비교.",
+    plot_voltage: "전압", plot_current: "전류", plot_charge: "전하",
+    vs_time: "vs 시간",
+    overlay: "오버레이", side_by_side: "나란히",
+    view: "보기", aspect: "비율", fonts: "폰트", format: "형식", download: "다운로드",
+    display_unit: "표시 단위",
+    time_window: "시간 범위",
+    custom: "사용자",
+    start: "시작",
+    end: "끝",
+    all: "전체",
+    axis_title: "축 제목", tick_label: "눈금", legend: "범례",
+    csv_data: "데이터 CSV (현재 표시)",
+    csv_stats: "통계 CSV (피크 / RMS / 평균 …)",
+    save_session: "⤓ 세션",
+    any_color: "사용자 색",
+    opacity: "투명도",
+    bar_width: "막대 너비",
+    marker_size: "점 크기",
+    legend_title: "샘플 범례",
+    plot_size: "플롯 크기",
+    apply_all: "닫기",
+    sample: "샘플",
+    compare_title: "피크 / RMS 비교",
+    metric: "지표", chart: "차트", grouping: "그룹화", yscale: "y축",
+    quantity: "측정량",
+    bar: "막대", scatter: "산점", line_markers: "선+점", line: "선",
+    series: "계열", add_series: "계열 추가", samples: "샘플",
+    no_samples: "(아직 샘플 없음)", remove: "삭제",
+    individual: "파일별", grouped: "접두어 그룹",
+    linear: "선형", log: "로그",
+    max_peak: "최대 |피크|",
+    mean_peak: "평균 피크",
+    peak_to_peak: "피크-피크",
+    rms: "RMS", mean: "평균", std: "표준편차", max: "최대", min: "최소",
+    no_files_msg: "이 측정량의 파일 없음",
+    no_compare_msg: "데이터 없음 — 파일을 먼저 올리세요",
+    confirm_reset: "모든 데이터를 삭제할까요?",
+    csv_exported: "CSV 내보내기 완료",
+    plot_exported: "플롯 내보내기 완료",
+    no_data: "내보낼 데이터 없음",
+    sample_added: "샘플 추가됨",
+    files_loaded: "{n}개 파일 로드됨",
+    parse_fail: "파싱 실패: {f}",
+    duration: "지속", points: "포인트",
+    dual_yaxis_title: "V & I 듀얼 축 오버레이",
+    dual_pick_sample: "샘플 선택:",
+    dual_hint: "같은 샘플의 V와 I를 두 개의 y축으로 한 플롯에 표시",
+    nfiles: "파일 {n}개",
+    peaks_detected: "피크 {n}개",
+  }
+};
+
+/* Origin classic increment list — publication-friendly categorical palette.
+   Used for both sample swatches (visible in dark UI) and trace colors
+   (visible on the white plot canvas). */
+const PALETTE = [
+  '#000000', // black
+  '#E60000', // red
+  '#008000', // green
+  '#0000FF', // blue
+  '#00B3B3', // cyan
+  '#B300B3', // magenta
+  '#B38F00', // dark yellow
+  '#000080', // navy
+  '#800080', // purple
+  '#722F37', // wine
+  '#556B2F', // olive
+  '#4169E1', // royal
+  '#FF4500', // orange red
+  '#008B8B', // dark cyan
+  '#8A2BE2', // violet
+  '#FF69B4', // pink
+];
+
+/* ─── Color + alpha helpers ───
+   Samples carry two color fields:
+     • s.color  → an always-opaque hex string like "#E60000" (the base color)
+     • s.alpha  → optional 0..1 transparency, defaults to 1
+   We pass an "effective color" (rgba string when alpha<1, hex when alpha==1) into
+   Plotly traces and CSS. Plot rendering uses effectiveColor(s); the swatch in the
+   sidebar uses the same so the UI reflects what the plot actually shows. */
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+  if (!m) return { r: 0, g: 0, b: 0 };
+  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+}
+/* ─── Display-time downsampling ───
+   Big files (>5000 points after time-slicing) get downsampled for plot rendering
+   only. Stats / peak detection / CSV export use the FULL data. The algorithm is
+   min/max-per-bucket: split the data into N buckets and keep both the lowest
+   and the highest sample from each. Output is ~2*buckets points, ordered in
+   time. This preserves every visible peak (no peak can "disappear" between two
+   adjacent buckets) and gives the Origin-style "fast overview, zoom to detail"
+   experience: when the user shortens the time window, the visible slice shrinks
+   below 5000 points and the full-fidelity data is shown automatically. */
+const MAX_DISPLAY_POINTS = 5000;
+
+function downsampleMinMax(t, y, targetN) {
+  const n = t.length;
+  if (n <= targetN) return { t, y, downsampled: false, orig: n };
+  const buckets = Math.max(2, Math.floor(targetN / 2));
+  const outT = new Array(buckets * 2);
+  const outY = new Array(buckets * 2);
+  let k = 0;
+  for (let b = 0; b < buckets; b++) {
+    const start = Math.floor(b * n / buckets);
+    const end   = Math.floor((b + 1) * n / buckets);
+    if (start >= end) continue;
+    let minI = start, maxI = start;
+    let minV = y[start], maxV = y[start];
+    for (let i = start + 1; i < end; i++) {
+      const v = y[i];
+      if (v < minV) { minV = v; minI = i; }
+      else if (v > maxV) { maxV = v; maxI = i; }
+    }
+    // Emit in time order so the plotted line stays monotonic in t.
+    if (minI <= maxI) {
+      outT[k] = t[minI]; outY[k] = y[minI]; k++;
+      if (maxI !== minI) { outT[k] = t[maxI]; outY[k] = y[maxI]; k++; }
+    } else {
+      outT[k] = t[maxI]; outY[k] = y[maxI]; k++;
+      outT[k] = t[minI]; outY[k] = y[minI]; k++;
+    }
+  }
+  outT.length = k;
+  outY.length = k;
+  return { t: outT, y: outY, downsampled: true, orig: n };
+}
+
+/* Tiny "fast mode" annotation that we drop into the plot layout when any trace
+   has been downsampled. Says "displaying X of N pts — zoom for full detail" in
+   the upper-right corner of the plot. */
+function fastModeBadge(shown, total, theme) {
+  return {
+    text: `fast mode — ${shown.toLocaleString()} of ${total.toLocaleString()} pts · zoom for full detail`,
+    showarrow: false,
+    xref: 'paper', yref: 'paper',
+    x: 1.0, y: 1.0,
+    xanchor: 'right', yanchor: 'bottom',
+    yshift: 4,
+    font: { family: 'Arial, Helvetica, sans-serif', size: 10, color: 'rgba(0,0,0,0.55)' },
+  };
+}
+
+function effectiveColor(sample) {
+  const a = (typeof sample.alpha === 'number') ? sample.alpha : 1;
+  const hex = sample.color || '#000000';
+  if (a >= 1) return hex;
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
+}
+
+/* Shift a hex color toward white (pct > 0) or black (pct < 0). pct is -100..+100.
+   Used by the comparison card to produce a lighter gradient-center for markers
+   and a darker outline color from a single series color. */
+function shadeColor(hex, pct) {
+  const { r, g, b } = hexToRgb(hex);
+  const k = pct / 100;
+  const mix = (c) => {
+    const t = k > 0 ? (255 - c) * k : c * k; // toward 255 or toward 0
+    return Math.max(0, Math.min(255, Math.round(c + t)));
+  };
+  const toHex = n => n.toString(16).padStart(2, '0');
+  return '#' + toHex(mix(r)) + toHex(mix(g)) + toHex(mix(b));
+}
+
+/* Series colors for the comparison card. Hardcoded scientific defaults — black,
+   red, blue — to match the Origin look in the user-provided example. */
+const COMPARE_SERIES_COLORS = ['#000000', '#E60000', '#1F4E9E'];
+
+/* "Peak Voltage (mV)" — title that goes on the Y axis (and the legend, if the
+   in-plot legend were ever enabled). metric label is capitalized, quantity name
+   in title case, unit in parens. */
+function compareSeriesLabel(quantity, metric, unit) {
+  const metricLabels = {
+    max_peak:     'Peak',
+    mean_peak:    'Mean Peak',
+    peak_to_peak: 'Peak-to-peak',
+    rms:          'RMS',
+    mean:         'Mean',
+    std:          'Std Dev',
+  };
+  const quantityNames = {
+    V: 'Voltage',
+    I: 'Current',
+    Q: 'Charge',
+  };
+  const m = metricLabels[metric] || metric;
+  const q = quantityNames[quantity] || quantity;
+  return `${m} ${q} (${unit})`;
+}
+
+/* The "active" time window for a quantity card: lo, hi (seconds). If the
+   user hasn't moved the slider, lo/hi are -Infinity/+Infinity, so sliceByTime
+   returns the full file. Used by the comparison card so stats respect what
+   the V/I/Q cards currently SHOW. */
+function resolveTimeWindow(quantity) {
+  const c = state.cards[quantity];
+  const lo = Number.isFinite(c?.timeStart) ? c.timeStart : -Infinity;
+  const hi = Number.isFinite(c?.timeEnd)   ? c.timeEnd   :  Infinity;
+  return { lo, hi };
+}
+
+const UNITS = {
+  V: ['kV', 'V', 'mV', 'uV'],
+  I: ['A', 'mA', 'uA', 'nA', 'pA'],
+  Q: ['C', 'mC', 'uC', 'nC', 'pC'],
+};
+const UNIT_FACTOR = {
+  V: { 'kV':1e3, 'V':1, 'mV':1e-3, 'uV':1e-6, 'μV':1e-6, 'µV':1e-6 },
+  I: { 'A':1, 'mA':1e-3, 'uA':1e-6, 'μA':1e-6, 'µA':1e-6, 'nA':1e-9, 'pA':1e-12 },
+  Q: { 'C':1, 'mC':1e-3, 'uC':1e-6, 'μC':1e-6, 'µC':1e-6, 'nC':1e-9, 'pC':1e-12 },
+};
+const QUANTITY_NAME = { V: 'voltage', I: 'current', Q: 'charge' };
+const QUANTITY_SYMBOL = { V: 'V', I: 'I', Q: 'Q' };
+
+/* ───────────────────────── STATE ───────────────────────── */
+const state = {
+  lang: localStorage.getItem('ep_lang') || 'en',
+  theme: localStorage.getItem('ep_theme') || 'dark',
+  uploadQty: 'V',                          // active quantity for upload
+  defaultUnit: { V: 'V', I: 'uA', Q: 'nC' }, // default unit per quantity for new files
+  samples: [],                             // {id, name, color, visible, files:[{id,name,type,unit,t,y}]}
+  activeSampleId: null,
+  // display (publication style — see render spec)
+  lineWidth: 2.4,
+  bareBg: false,         // white plot bg by default; toggle ON for slide/poster overlay
+  showGrid: false,       // grid OFF by default per pub spec
+  showAxes: true,
+  showMirror: true,      // mirror top/right axis rules (4-sided box)
+  ticksOutward: true,    // ticks point outward
+  smoothLines: false,
+  fonts: { axisTitle: 18, tickLabel: 15, legend: 15 },
+  // comparison-card styling (editable from its toolbar)
+  barWidth: 0.65,        // fraction of slot width
+  markerSize: 11,        // scatter marker diameter in px
+  // per-card settings
+  //   timeStart / timeEnd are absolute seconds (NOT rebased — they show original file time).
+  //   timeStart === null && timeEnd === null  →  "all" (show full extent).
+  cards: {
+    V: { view: 'side_by_side', aspect: '4:3', format: 'png', displayUnit: null, timeStart: null, timeEnd: null },
+    I: { view: 'side_by_side', aspect: '4:3', format: 'png', displayUnit: null, timeStart: null, timeEnd: null },
+    Q: { view: 'side_by_side', aspect: '4:3', format: 'png', displayUnit: null, timeStart: null, timeEnd: null },
+    cmp:    { aspect: '4:3', format: 'png' },
+    dual:   { aspect: '4:3', format: 'png', sampleId: null, timeStart: null, timeEnd: null },
+    legend: { format: 'png' },
+  },
+  // plotScale shrinks every plot card to a fraction of the available width (0.4–1.0).
+  // Default 0.55 so multiple cards fit without much scrolling.
+  plotScale: 0.55,
+  // comparison card
+  compare: {
+    // List of (quantity, metric) pairs to plot. Each maps to its own Y axis.
+    // Up to 3 — adding a 4th is disabled in the UI.
+    series: [
+      { id: 'cmp_s1', quantity: 'V', metric: 'max_peak' },
+    ],
+    // chart type: 'bar' | 'scatter' | 'line_markers' | 'line'
+    // Bar is auto-disabled when series.length > 1 (multi-axis bars look bad).
+    chart: 'line_markers',
+    yscale: 'linear',
+    // Per-card sample selection. null = all currently-visible samples are shown.
+    // When the user clicks a sample pill, its id is toggled in this list.
+    hiddenSampleIds: [],
+  },
+};
+
+const t = (key, vars={}) => {
+  let s = (STRINGS[state.lang] && STRINGS[state.lang][key]) || STRINGS.en[key] || key;
+  Object.keys(vars).forEach(k => s = s.replace(`{${k}}`, vars[k]));
+  return s;
+};
+
+/* ───────────────────────── UTIL ───────────────────────── */
+const uid = () => 'x' + Math.random().toString(36).slice(2, 9);
+
+function toast(msg, kind='ok') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind === 'danger' ? ' danger' : '');
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(8px)'; el.style.transition='all .25s'; }, 2500);
+  setTimeout(() => el.remove(), 2900);
+}
+/* Persistent "in progress" toast: doesn't auto-dismiss. Returns a function
+   that, when called, removes the toast. Useful for "parsing big file…" feedback. */
+function pendingToast(msg, kind='ok') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind === 'danger' ? ' danger' : '');
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  let dismissed = false;
+  return (newMsg) => {
+    if (dismissed) return;
+    if (typeof newMsg === 'string') { el.textContent = newMsg; return; }
+    dismissed = true;
+    el.style.opacity='0'; el.style.transform='translateY(8px)'; el.style.transition='all .25s';
+    setTimeout(() => el.remove(), 400);
+  };
+}
+function fmt(v, sig=3) {
+  if (!isFinite(v)) return '—';
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1000 || a < 0.01) return v.toExponential(Math.max(0, sig-1));
+  return v.toPrecision(sig);
+}
+function escapeAttr(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function maxAbs(arr) {
+  let m = 0;
+  for (let i = 0; i < arr.length; i++) { const a = Math.abs(arr[i]); if (a > m) m = a; }
+  return m;
+}
+
+/* Axis title in the form "Voltage (mV)" / "Current (nA)" / "Charge (pC)".
+   Uses the translated quantity name and capitalizes the first letter. */
+function axisLabel(quantity, unit) {
+  const name = t('plot_' + QUANTITY_NAME[quantity]) || QUANTITY_SYMBOL[quantity];
+  const cap = name.charAt(0).toLocaleUpperCase() + name.slice(1);
+  return `${cap} (${unit})`;
+}
+
+/* Compute plot margins that scale with the current font sizes so that axis
+   titles and tick labels never get clipped or crowded together — even when
+   the user bumps the tick-label slider up to 30+ px. */
+function autoMargins() {
+  // Y-axis (rotated 90° on the left): need room for the title + the widest tick label
+  // we can plausibly hit (~4 characters of tick text) + standoff.
+  const l = Math.max(78, state.fonts.axisTitle + Math.round(state.fonts.tickLabel * 3.5) + 22);
+  // X-axis (bottom): tick labels stacked vertically below the line, then standoff,
+  // then the axis title text.
+  const b = Math.max(64, state.fonts.tickLabel + state.fonts.axisTitle + 28);
+  return { l, b };
+}
+
+/* Standoff between axis line and axis title — grows with tick label size so the
+   title moves further out when ticks get large. */
+function titleStandoff() {
+  return Math.max(8, Math.round(state.fonts.tickLabel * 0.5));
+}
+
+/* Publication-style colors (Origin-like).
+   The plot canvas is ALWAYS white-on-black-ink regardless of the surrounding UI theme.
+   `bareBg` flips both bgs to transparent so the figure can sit on a colored slide. */
+function plotTheme() {
+  return {
+    bg:    state.bareBg ? 'rgba(0,0,0,0)' : '#ffffff',
+    paper: state.bareBg ? 'rgba(0,0,0,0)' : '#ffffff',
+    ink:    '#000000',   // axes, ticks, frame
+    label:  '#000000',   // tick labels & axis titles
+    grid:   '#dddddd',   // light gray grid when enabled
+  };
+}
+
+/* ───────────────────────── PARSING ───────────────────────── */
+/* ─── Web Worker parser for big files ───
+   For files larger than the threshold, we offload parsing to a background
+   thread so the page never freezes. The worker is built inline from a Blob URL
+   so there's no separate file to ship. It posts back progress messages every
+   chunk; we forward those to the same onProgress callback used by the inline
+   parser.
+   The same parser function is sent to the worker by stringifying it — that
+   means any bug fix here propagates to both paths automatically. */
+const WORKER_FILE_THRESHOLD = 3 * 1024 * 1024;       // > 3 MB → worker
+let _parseWorker = null;
+let _parseWorkerMsgId = 0;
+function _getParseWorker() {
+  if (_parseWorker) return _parseWorker;
+  // Worker source: inline parser + message loop. Note the parser logic must be
+  // self-contained (no closures over outer scope).
+  const src = `
+    self.onmessage = async function(ev) {
+      const { id, file } = ev.data;
+      let text;
+      try {
+        text = await file.text();
+      } catch (e) {
+        self.postMessage({ id, error: 'failed to read file: ' + (e && e.message || e) });
+        return;
+      }
+      try {
+        const lines = text.split(/\\r?\\n/);
+        let delim = null, dataStart = -1, headerLine = null;
+        const tries = [',', '\\t', ';', /\\s+/];
+        outer:
+        for (let i = 0; i < Math.min(lines.length, 500); i++) {
+          const raw = lines[i].trim();
+          if (!raw) continue;
+          for (const d of tries) {
+            const parts = raw.split(d).map(s => s.trim()).filter(s => s !== '');
+            if (parts.length < 2) continue;
+            let numericCount = 0;
+            for (let k = 0; k < parts.length; k++) {
+              if (!isNaN(parseFloat(parts[k]))) numericCount++;
+            }
+            if (numericCount >= 2 && numericCount >= parts.length - 1) {
+              delim = d;
+              dataStart = i;
+              for (let j = i - 1; j >= 0; j--) {
+                const h = lines[j].trim();
+                if (!h) continue;
+                const hp = h.split(d).map(s => s.trim()).filter(s => s !== '');
+                if (hp.length >= 2) headerLine = hp;
+                break;
+              }
+              break outer;
+            }
+          }
+        }
+        if (dataStart < 0) {
+          self.postMessage({ id, result: { rows: [], headers: [], ncol: 0 } });
+          return;
+        }
+        const rows = [];
+        let ncol = 0;
+        const totalLines = lines.length;
+        const CHUNK = 50000;
+        let i = dataStart;
+        while (i < totalLines) {
+          const end = Math.min(i + CHUNK, totalLines);
+          for (let k = i; k < end; k++) {
+            const raw = lines[k];
+            if (!raw) continue;
+            const trimmed = raw.trim();
+            if (!trimmed) continue;
+            const parts = trimmed.split(delim);
+            const nums = [];
+            let bad = false;
+            for (let p = 0; p < parts.length; p++) {
+              const s = parts[p];
+              if (s === '') continue;
+              let n = +s;
+              if (n !== n) {
+                n = parseFloat(s);
+                if (isNaN(n)) { bad = true; break; }
+              }
+              nums.push(n);
+            }
+            if (!bad && nums.length >= 2) {
+              rows.push(nums);
+              if (nums.length > ncol) ncol = nums.length;
+            }
+          }
+          i = end;
+          if (i < totalLines) {
+            self.postMessage({ id, progress: { done: i, total: totalLines, nRows: rows.length } });
+          }
+        }
+        const headers = [];
+        for (let c = 0; c < ncol; c++) {
+          headers.push(headerLine && headerLine[c] ? headerLine[c] : 'col' + c);
+        }
+        self.postMessage({ id, result: { rows, headers, ncol } });
+      } catch (err) {
+        self.postMessage({ id, error: err && err.message || String(err) });
+      }
+    };
+  `;
+  try {
+    const blob = new Blob([src], { type: 'application/javascript' });
+    _parseWorker = new Worker(URL.createObjectURL(blob));
+  } catch (e) {
+    console.warn('Web Worker unavailable, falling back to main-thread parsing', e);
+    _parseWorker = false;     // sentinel: tried & failed
+  }
+  return _parseWorker;
+}
+
+function parseInWorker(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const w = _getParseWorker();
+    if (!w) { reject(new Error('worker unavailable')); return; }
+    const id = ++_parseWorkerMsgId;
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.id !== id) return;
+      if (d.progress) {
+        try { onProgress && onProgress(d.progress.done, d.progress.total, d.progress.nRows); } catch (er) {}
+        return;
+      }
+      w.removeEventListener('message', onMsg);
+      if (d.error) reject(new Error(d.error));
+      else resolve(d.result);
+    };
+    w.addEventListener('message', onMsg);
+    w.postMessage({ id, file });
+  });
+}
+
+/* Parse a free-form numeric data file (CSV / TSV / SSV / whitespace-separated).
+   Async + chunked: yields to the event loop every 50k rows so the UI doesn't
+   freeze on big files. Critically, it does NOT use `Math.max(...rows.map(...))`
+   to compute the column count — that spread operator blows up with a RangeError
+   on arrays longer than ~65k entries in V8, which is exactly what would happen
+   for any moderately large CSV (this used to manifest as a generic "could not
+   parse" toast). We track the running max inline instead. */
+async function parseDataFile(text, onProgress) {
+  const lines = text.split(/\r?\n/);
+  let delim = null, dataStart = -1, headerLine = null;
+  const tries = [',', '\t', ';', /\s+/];
+
+  // 1. Find delimiter + data-start by sampling early lines.
+  outer:
+  for (let i = 0; i < Math.min(lines.length, 500); i++) {
+    const raw = lines[i].trim();
+    if (!raw) continue;
+    for (const d of tries) {
+      const parts = raw.split(d).map(s => s.trim()).filter(s => s !== '');
+      if (parts.length < 2) continue;
+      let numericCount = 0;
+      for (let k = 0; k < parts.length; k++) {
+        if (!isNaN(parseFloat(parts[k]))) numericCount++;
+      }
+      if (numericCount >= 2 && numericCount >= parts.length - 1) {
+        delim = d;
+        dataStart = i;
+        for (let j = i - 1; j >= 0; j--) {
+          const h = lines[j].trim();
+          if (!h) continue;
+          const hp = h.split(d).map(s => s.trim()).filter(s => s !== '');
+          if (hp.length >= 2) headerLine = hp;
+          break;
+        }
+        break outer;
+      }
+    }
+  }
+  if (dataStart < 0) return { rows: [], headers: [], ncol: 0 };
+
+  // 2. Parse all data rows, chunked. Yield to the event loop every CHUNK lines
+  //    so the UI stays responsive and the progress toast can update.
+  const rows = [];
+  let ncol = 0;                                            // O(1) max — NO `...rows.map`
+  const totalLines = lines.length;
+  const CHUNK = 50000;
+
+  let i = dataStart;
+  while (i < totalLines) {
+    const end = Math.min(i + CHUNK, totalLines);
+    for (let k = i; k < end; k++) {
+      const raw = lines[k];
+      if (!raw) continue;
+      const trimmed = raw.trim();
+      if (!trimmed) continue;
+      const parts = trimmed.split(delim);
+      const nums = [];
+      let bad = false;
+      for (let p = 0; p < parts.length; p++) {
+        const s = parts[p];
+        if (s === '') continue;
+        let n = +s;
+        if (n !== n) {
+          n = parseFloat(s);
+          if (isNaN(n)) { bad = true; break; }
+        }
+        nums.push(n);
+      }
+      if (!bad && nums.length >= 2) {
+        rows.push(nums);
+        if (nums.length > ncol) ncol = nums.length;
+      }
+    }
+    i = end;
+    if (i < totalLines) {
+      if (typeof onProgress === 'function') {
+        try { onProgress(i, totalLines, rows.length); } catch (e) {}
+      }
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  const headers = [];
+  for (let c = 0; c < ncol; c++) {
+    headers.push(headerLine && headerLine[c] ? headerLine[c] : `col${c}`);
+  }
+  return { rows, headers, ncol };
+}
+
+/* pick time column + signal column.
+   - Time column: header name match (time, t, sec...) OR leftmost monotonically-increasing column.
+   - Signal column: ALWAYS the first non-time column with numeric data.
+     (Not "largest spread" — that breaks when extra columns like force/temperature
+      have very different units than the actual signal.) */
+function pickColumns(parsed) {
+  if (!parsed.rows.length) return null;
+  const headers = parsed.headers.map(h => h.toLowerCase());
+  const ncol = parsed.ncol;
+  let tCol = -1;
+  // find time by header
+  for (let i = 0; i < headers.length; i++) {
+    if (/^(t|time|sec|seconds?|t\(s\))($|\W|\(.*\))/i.test(headers[i])) { tCol = i; break; }
+  }
+  // else leftmost monotonically-increasing column
+  if (tCol < 0) {
+    for (let c = 0; c < ncol; c++) {
+      let mono = true;
+      for (let r = 1; r < Math.min(parsed.rows.length, 300); r++) {
+        if (parsed.rows[r][c] < parsed.rows[r-1][c] - 1e-12) { mono = false; break; }
+      }
+      if (mono) { tCol = c; break; }
+    }
+  }
+  if (tCol < 0) tCol = 0;
+  // signal = first non-time column with at least one numeric value
+  let yCol = -1;
+  for (let c = 0; c < ncol; c++) {
+    if (c === tCol) continue;
+    let hasNum = false;
+    for (let r = 0; r < Math.min(parsed.rows.length, 50); r++) {
+      if (typeof parsed.rows[r][c] === 'number' && !isNaN(parsed.rows[r][c])) { hasNum = true; break; }
+    }
+    if (hasNum) { yCol = c; break; }
+  }
+  if (yCol < 0) yCol = (tCol === 0 ? 1 : 0);
+  return { tCol, yCol };
+}
+
+function extractCols(parsed, tCol, yCol) {
+  const t = [], y = [];
+  for (const r of parsed.rows) {
+    if (typeof r[tCol] === 'number' && typeof r[yCol] === 'number') {
+      t.push(r[tCol]); y.push(r[yCol]);
+    }
+  }
+  return { t, y };
+}
+
+/* ───────────────────────── PEAKS / STATS ───────────────────────── */
+function findPeaks(y, opts={}) {
+  const { minDist=2, prominence=0, useAbs=true } = opts;
+  const src = useAbs ? y.map(Math.abs) : y;
+  const peaks = [];
+  for (let i = 1; i < src.length - 1; i++) {
+    if (src[i] > src[i-1] && src[i] >= src[i+1]) peaks.push(i);
+  }
+  // filter by prominence (simple)
+  const kept = peaks.filter(p => calcProminence(src, p) >= prominence);
+  // sort by height desc, then enforce min distance
+  kept.sort((a, b) => src[b] - src[a]);
+  const out = [];
+  for (const p of kept) if (out.every(k => Math.abs(k - p) >= minDist)) out.push(p);
+  return out.sort((a, b) => a - b);
+}
+function calcProminence(y, idx) {
+  const h = y[idx];
+  let lo = h, hi = h;
+  for (let i = idx - 1; i >= 0; i--) {
+    if (y[i] > h) break;
+    if (y[i] < lo) lo = y[i];
+  }
+  for (let i = idx + 1; i < y.length; i++) {
+    if (y[i] > h) break;
+    if (y[i] < hi) hi = y[i];
+  }
+  return h - Math.max(lo, hi);
+}
+
+function fileStats(y) {
+  if (!y.length) return null;
+  let mx = -Infinity, mn = Infinity, sum = 0, sq = 0;
+  for (const v of y) {
+    if (v > mx) mx = v;
+    if (v < mn) mn = v;
+    sum += v; sq += v * v;
+  }
+  const n = y.length;
+  const mean = sum / n;
+  let varc = 0;
+  for (const v of y) varc += (v - mean) ** 2;
+  const std = Math.sqrt(varc / n);
+  const rms = Math.sqrt(sq / n);
+  const peakIdx = findPeaks(y, { minDist: 3, useAbs: true });
+  const peakVals = peakIdx.map(i => Math.abs(y[i]));
+  const meanPeak = peakVals.length ? peakVals.reduce((a, b) => a + b, 0) / peakVals.length : Math.max(Math.abs(mx), Math.abs(mn));
+  return {
+    max: mx, min: mn, peak_to_peak: mx - mn,
+    mean, std, rms,
+    max_peak: Math.max(Math.abs(mx), Math.abs(mn)),
+    mean_peak: meanPeak,
+    npeaks: peakVals.length,
+  };
+}
+
+/* ───────────────────────── SAMPLES ───────────────────────── */
+function addSample(silent=false) {
+  const used = state.samples.map(s => s.color);
+  const color = PALETTE.find(c => !used.includes(c)) || PALETTE[state.samples.length % PALETTE.length];
+  const s = {
+    id: uid(),
+    name: `${t('sample')} ${state.samples.length + 1}`,
+    color,
+    alpha: 1,
+    visible: true,
+    files: [],
+  };
+  state.samples.push(s);
+  state.activeSampleId = s.id;
+  if (!silent) toast(t('sample_added'));
+  return s;
+}
+function getActiveSample() {
+  return state.samples.find(s => s.id === state.activeSampleId);
+}
+
+/* Guess the quantity from a filename: 'vol*' → V, 'curr*' → I, 'cha*' → Q.
+   Matches case-insensitively as a substring. Returns null if no match. */
+function guessTypeFromName(name) {
+  const n = name.toLowerCase();
+  // order matters: check longer/more specific terms first
+  if (/\bvol|voltage/.test(n))   return 'V';
+  if (/\bcurr|current|amp(?!l)/.test(n)) return 'I';   // 'amp' but not 'ample'
+  if (/\bcha|charge|coul/.test(n)) return 'Q';
+  return null;
+}
+
+/* True when the sample name still has its auto-assigned default form ("Sample 3", "샘플 2"). */
+function isDefaultSampleName(name) {
+  return /^(Sample|샘플)\s*\d+$/.test(name || '');
+}
+
+/* ───────────────────────── FILE HANDLING ───────────────────────── */
+async function handleFiles(fileList) {
+  // Short-circuit: if the user dropped a saved-session HTML, route it to the
+  // session importer instead of trying to parse it as CSV. We check the first
+  // .html(?) file and, if it has the session marker, handle the WHOLE drop as
+  // a session import. Mixed drops (saved file + CSVs) load only the session.
+  for (const file of fileList) {
+    if (/\.html?$/i.test(file.name) || file.type === 'text/html') {
+      const handled = await importSavedSession(file);
+      if (handled) return;
+    }
+  }
+  if (!state.samples.length) addSample(true);
+  const sample = getActiveSample();
+  const wasEmpty = sample.files.length === 0;
+  let ok = 0, guessedAny = false;
+  for (const file of fileList) {
+    // For big files, show a persistent "parsing..." toast so the user knows
+    // we're working. Threshold: 3MB. Updates as the parser progresses.
+    const big = file.size > 3 * 1024 * 1024;
+    const dismiss = big
+      ? pendingToast(`reading ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)…`)
+      : null;
+    try {
+      const onProgress = (done, total, nRows) => {
+        if (dismiss) {
+          const pct = Math.round(done / total * 100);
+          dismiss(`parsing ${file.name} — ${pct}% (${nRows.toLocaleString()} rows)…`);
+        }
+      };
+      // Route through Web Worker when the file is big and worker is available.
+      // The page stays fully responsive while the worker thread parses.
+      let parsed = null;
+      if (file.size > WORKER_FILE_THRESHOLD && window.Worker) {
+        try {
+          parsed = await parseInWorker(file, onProgress);
+        } catch (e) {
+          console.warn('worker parse failed, falling back to main-thread', e);
+          parsed = null;
+        }
+      }
+      if (!parsed) {
+        const text = await file.text();
+        parsed = await parseDataFile(text, onProgress);
+      }
+      if (!parsed.rows.length) {
+        if (dismiss) dismiss();
+        toast(t('parse_fail', { f: file.name }) + ' (no numeric rows found)', 'danger');
+        continue;
+      }
+      const cols = pickColumns(parsed);
+      const { t: tArr, y: yArr } = extractCols(parsed, cols.tCol, cols.yCol);
+      if (!tArr.length) {
+        if (dismiss) dismiss();
+        toast(t('parse_fail', { f: file.name }) + ' (empty time/value columns)', 'danger');
+        continue;
+      }
+      // Auto-detect quantity from filename; fall back to the tab the user chose.
+      const guessed = guessTypeFromName(file.name);
+      const fileType = guessed || state.uploadQty;
+      if (guessed && guessed !== state.uploadQty) guessedAny = true;
+      const autoUnit = autoUnitForSI(fileType, maxAbs(yArr));
+      sample.files.push({
+        id: uid(),
+        name: file.name.replace(/\.[^.]+$/, ''),
+        type: fileType,
+        unit: 'SI',
+        suggestedUnit: autoUnit,
+        invert: false,
+        t: tArr,
+        y: yArr,
+        parsed,
+        tCol: cols.tCol,
+        yCol: cols.yCol,
+      });
+      if (dismiss) dismiss();
+      ok++;
+    } catch (e) {
+      if (dismiss) dismiss();
+      console.error(e);
+      // Surface the actual reason where possible — RangeError / OOM / etc.
+      const reason = (e && e.name === 'RangeError') ? ' (file too large for browser)'
+                   : (e && e.message) ? ` (${String(e.message).slice(0, 80)})` : '';
+      toast(t('parse_fail', { f: file.name }) + reason, 'danger');
+    }
+  }
+  // If the sample was empty AND still has its auto-name, rename it to the first
+  // file we just loaded — that's usually what the user wants ("Sample 3" → file name).
+  if (ok > 0 && wasEmpty && isDefaultSampleName(sample.name) && sample.files.length > 0) {
+    sample.name = sample.files[0].name;
+  }
+  if (ok) toast(t('files_loaded', { n: ok }) + (guessedAny ? ' · auto-typed by filename' : ''));
+  render();
+}
+
+/* Slice (t, y) to an absolute time window [tStart, tEnd] — DOES NOT REBASE time.
+   This keeps the displayed axis aligned with the source file (per pub spec).
+   - tStart / tEnd === null → use the file's natural bound on that side.
+   - Out-of-range points are clipped, not extrapolated. */
+function sliceByTime(tArr, yArr, tStart, tEnd) {
+  if (tStart == null && tEnd == null) return { t: tArr, y: yArr };
+  const lo = (tStart == null) ? -Infinity : tStart;
+  const hi = (tEnd   == null) ?  Infinity : tEnd;
+  const t = [], y = [];
+  for (let i = 0; i < tArr.length; i++) {
+    if (tArr[i] >= lo && tArr[i] <= hi) {
+      t.push(tArr[i]);   // no rebasing — keep original time stamps
+      y.push(yArr[i]);
+    }
+  }
+  return { t, y };
+}
+
+/* Compute the full time extent of a quantity (across all visible files of that type).
+   Used to drive the time-range slider's min/max. Returns null when no data. */
+function timeExtent(quantity) {
+  let lo = Infinity, hi = -Infinity;
+  state.samples.forEach(s => {
+    if (!s.visible) return;
+    s.files.forEach(f => {
+      if (f.type !== quantity || !f.t.length) return;
+      if (f.t[0] < lo) lo = f.t[0];
+      if (f.t[f.t.length-1] > hi) hi = f.t[f.t.length-1];
+    });
+  });
+  if (!isFinite(lo) || !isFinite(hi) || hi <= lo) return null;
+  return { lo, hi };
+}
+
+/* Resolve the effective [tStart, tEnd] for a card given its possibly-null settings. */
+function resolveTimeWindow(quantity) {
+  const card = state.cards[quantity];
+  const ext = timeExtent(quantity);
+  const lo = (card.timeStart != null) ? card.timeStart : (ext ? ext.lo : 0);
+  const hi = (card.timeEnd   != null) ? card.timeEnd   : (ext ? ext.hi : 1);
+  return { lo, hi, ext };
+}
+
+/* Convert y from SI base (A, V, C) to the requested display unit.
+   Applies the file's `invert` flag (negates values) so axis tick labels stay positive. */
+function siToDisplay(quantity, yArr, displayUnit, invert) {
+  const tf = UNIT_FACTOR[quantity][displayUnit];
+  if (!tf) return invert ? yArr.map(v => -v) : yArr;
+  // y is in SI units (factor 1). target = y / tf.
+  const k = (invert ? -1 : 1) / tf;
+  return yArr.map(v => v * k);
+}
+
+/* Given a max-abs value assumed to be in SI base units, return the unit prefix
+   that puts the displayed number in a clean range.
+   Two passes: first try [1, 1000) (preferred — gives 1-to-3-digit numbers),
+   then [0.1, 1000) (fallback). Falls back to default for 0 or unrecognized. */
+function autoUnitForSI(quantity, siMaxAbs) {
+  if (!siMaxAbs || !isFinite(siMaxAbs)) return state.defaultUnit[quantity];
+  // pass 1: prefer numbers in [1, 1000)
+  for (const u of UNITS[quantity]) {
+    const f = UNIT_FACTOR[quantity][u];
+    const disp = siMaxAbs / f;
+    if (disp >= 1 && disp < 1000) return u;
+  }
+  // pass 2: accept [0.1, 1000)
+  for (const u of UNITS[quantity]) {
+    const f = UNIT_FACTOR[quantity][u];
+    const disp = siMaxAbs / f;
+    if (disp >= 0.1 && disp < 1000) return u;
+  }
+  // way out of range → biggest/smallest prefix
+  const sorted = UNITS[quantity].slice().sort((a, b) => UNIT_FACTOR[quantity][b] - UNIT_FACTOR[quantity][a]);
+  return siMaxAbs > 1 ? sorted[0] : sorted[sorted.length - 1];
+}
+
+/* pick a single display unit across all (visible) files of a quantity:
+   convert each file's max-abs to SI, take median, choose prefix in [0.1, 1000]. */
+function chooseDisplayUnit(quantity) {
+  // honor explicit per-card override
+  const override = state.cards[quantity] && state.cards[quantity].displayUnit;
+  if (override && UNIT_FACTOR[quantity][override]) return override;
+  // f.y is always SI, so max-abs is already in SI base
+  const sis = [];
+  state.samples.forEach(s => {
+    if (!s.visible) return;
+    s.files.forEach(f => {
+      if (f.type !== quantity) return;
+      sis.push(maxAbs(f.y));
+    });
+  });
+  if (!sis.length) return state.defaultUnit[quantity];
+  sis.sort((a, b) => a - b);
+  const med = sis[Math.floor(sis.length / 2)];
+  if (med === 0) return state.defaultUnit[quantity];
+  // prefer [1, 1000) then [0.1, 1000)
+  for (const u of UNITS[quantity]) {
+    const f = UNIT_FACTOR[quantity][u];
+    const disp = med / f;
+    if (disp >= 1 && disp < 1000) return u;
+  }
+  for (const u of UNITS[quantity]) {
+    const f = UNIT_FACTOR[quantity][u];
+    const disp = med / f;
+    if (disp >= 0.1 && disp < 1000) return u;
+  }
+  return UNITS[quantity][1] || UNITS[quantity][0];
+}
+
+/* ───────────────────────── RENDER ───────────────────────── */
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.getElementById('themeToggle').textContent = state.theme === 'dark' ? '◐' : '◑';
+  redrawAll();
+}
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const s = t(key);
+    if (s.includes('<em>')) el.innerHTML = s; else el.textContent = s;
+  });
+  document.getElementById('langToggle').textContent = state.lang === 'en' ? 'EN' : '한';
+  render();
+}
+
+function renderSidebar() {
+  // qty tabs
+  document.querySelectorAll('.qty-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.qty === state.uploadQty);
+  });
+  // samples
+  const list = document.getElementById('samplesList');
+  list.innerHTML = '';
+
+  // helper to attach drop-target behaviour to a wrapper element.
+  // Accepts BOTH file-drag (move file between samples) and sample-drag (reorder samples).
+  function attachDropTarget(wrap, targetSampleId) {
+    wrap.dataset.sampleId = targetSampleId;
+    wrap.addEventListener('dragover', e => {
+      const types = e.dataTransfer.types;
+      const isFile   = types.includes('application/x-electroplot-file');
+      const isSample = types.includes('application/x-electroplot-sample');
+      if (!isFile && !isSample) return;
+      e.preventDefault();
+      if (isFile) {
+        wrap.classList.add('drop-target');
+      } else {
+        // Determine before/after based on cursor Y within the wrap
+        const rect = wrap.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+        wrap.classList.toggle('reorder-target-before', before);
+        wrap.classList.toggle('reorder-target-after', !before);
+      }
+    });
+    wrap.addEventListener('dragleave', e => {
+      if (e.target === wrap || !wrap.contains(e.relatedTarget)) {
+        wrap.classList.remove('drop-target', 'reorder-target-before', 'reorder-target-after');
+      }
+    });
+    wrap.addEventListener('drop', e => {
+      e.preventDefault();
+      const fileRaw   = e.dataTransfer.getData('application/x-electroplot-file');
+      const sampleRaw = e.dataTransfer.getData('application/x-electroplot-sample');
+      const before = wrap.classList.contains('reorder-target-before');
+      wrap.classList.remove('drop-target', 'reorder-target-before', 'reorder-target-after');
+      if (fileRaw) {
+        // ── move file between samples
+        let data; try { data = JSON.parse(fileRaw); } catch { return; }
+        if (data.sourceSampleId === targetSampleId) return;
+        const src = state.samples.find(x => x.id === data.sourceSampleId);
+        const dst = state.samples.find(x => x.id === targetSampleId);
+        if (!src || !dst) return;
+        const idx = src.files.findIndex(x => x.id === data.fileId);
+        if (idx < 0) return;
+        const [moved] = src.files.splice(idx, 1);
+        dst.files.push(moved);
+        ['V','I','Q'].forEach(qq => { if (state.cards[qq]) state.cards[qq].displayUnit = null; });
+        render();
+        toast(`moved "${moved.name}" → ${dst.name}`);
+      } else if (sampleRaw) {
+        // ── reorder samples (drag-and-drop the whole sample to a new position)
+        let data; try { data = JSON.parse(sampleRaw); } catch { return; }
+        if (data.sourceSampleId === targetSampleId) return;
+        const srcIdx = state.samples.findIndex(s => s.id === data.sourceSampleId);
+        if (srcIdx < 0) return;
+        const [moved] = state.samples.splice(srcIdx, 1);
+        // after splice the target index might have shifted
+        let tgtIdx = state.samples.findIndex(s => s.id === targetSampleId);
+        if (tgtIdx < 0) tgtIdx = state.samples.length;
+        state.samples.splice(before ? tgtIdx : tgtIdx + 1, 0, moved);
+        render();
+        toast(`reordered samples`);
+      }
+    });
+  }
+
+  state.samples.forEach(s => {
+    // wrap sample + its files so the WHOLE block is a drop target
+    const wrap = document.createElement('div');
+    wrap.className = 'sample-wrap';
+    list.appendChild(wrap);
+    attachDropTarget(wrap, s.id);
+
+    const row = document.createElement('div');
+    row.className = 'sample-row' + (s.id === state.activeSampleId ? ' active' : '');
+    row.innerHTML = `
+      <span class="sample-drag-handle" title="drag to reorder samples" draggable="true">⋮⋮</span>
+      <div class="sample-color" style="background:${effectiveColor(s)}" data-act="color"></div>
+      <input class="sample-name" value="${escapeAttr(s.name)}" title="${escapeAttr(s.name)}" />
+      <span class="sample-count">${s.files.length}</span>
+      <button class="sample-vis ${s.visible?'on':''}" data-act="vis" title="visibility">${s.visible?'●':'○'}</button>
+      <button class="sample-del" data-act="del" title="delete">×</button>
+    `;
+    // drag handle starts a SAMPLE drag (different MIME from file drag)
+    const dragH = row.querySelector('.sample-drag-handle');
+    dragH.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/x-electroplot-sample',
+        JSON.stringify({ sourceSampleId: s.id }));
+      row.style.opacity = '.35';
+    });
+    dragH.addEventListener('dragend', () => row.style.opacity = '');
+    // stop the drag handle's mousedown from also activating the row click
+    dragH.addEventListener('mousedown', e => e.stopPropagation());
+    row.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-act]');
+      if (!target) { state.activeSampleId = s.id; renderSidebar(); return; }
+      const act = target.dataset.act;
+      e.stopPropagation();
+      if (act === 'color') showColorPicker(s, target);
+      else if (act === 'vis') { s.visible = !s.visible; renderSidebar(); redrawAll(); }
+      else if (act === 'del') {
+        state.samples = state.samples.filter(x => x.id !== s.id);
+        if (state.activeSampleId === s.id) state.activeSampleId = state.samples[0]?.id || null;
+        render();
+      }
+    });
+    const nameInp = row.querySelector('.sample-name');
+    nameInp.addEventListener('click', e => e.stopPropagation());
+    nameInp.addEventListener('input', (e) => {
+      s.name = e.target.value;
+      nameInp.title = s.name;
+      redrawAll();
+    });
+    wrap.appendChild(row);
+
+    if (s.files.length) {
+      const fwrap = document.createElement('div');
+      fwrap.className = 'sample-files';
+      s.files.forEach(f => {
+        const fd = document.createElement('div');
+        fd.className = 'sample-file';
+        fd.draggable = true;
+        // file row markup
+        const hasCols = f.parsed && f.parsed.ncol > 2;
+        let colPicker = '';
+        if (hasCols) {
+          colPicker = `<select class="select-mini file-col" title="which column to plot">`;
+          for (let c = 0; c < f.parsed.ncol; c++) {
+            if (c === f.tCol) continue;
+            const label = (f.parsed.headers[c] && !/^col\d+$/.test(f.parsed.headers[c])) ? f.parsed.headers[c] : `col ${c+1}`;
+            colPicker += `<option value="${c}" ${c===f.yCol?'selected':''}>${escapeAttr(label)}</option>`;
+          }
+          colPicker += `</select>`;
+        }
+        fd.innerHTML = `
+          <span class="file-drag-handle" title="drag to another sample">⋮⋮</span>
+          <span class="file-tag ${f.type}">${f.type}</span>
+          <textarea class="file-name" rows="1" spellcheck="false" title="${escapeAttr(f.name)} — click to edit · appears in plot legend">${escapeAttr(f.name)}</textarea>
+          ${colPicker}
+          <button class="file-invert ${f.invert?'on':''}" title="invert values (flip the curve)">±</button>
+          <div class="file-type-mini">
+            <button class="${f.type==='V'?'on':''}" data-t="V">V</button>
+            <button class="${f.type==='I'?'on':''}" data-t="I">I</button>
+            <button class="${f.type==='Q'?'on':''}" data-t="Q">Q</button>
+          </div>
+          <button class="file-x" title="remove">×</button>
+        `;
+        // drag handlers
+        fd.addEventListener('dragstart', e => {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('application/x-electroplot-file',
+            JSON.stringify({ fileId: f.id, sourceSampleId: s.id }));
+          fd.classList.add('dragging');
+        });
+        fd.addEventListener('dragend', () => fd.classList.remove('dragging'));
+        fd.querySelectorAll('input, select, button, textarea').forEach(el => {
+          el.addEventListener('mousedown', ev => ev.stopPropagation());
+        });
+        // file-name textarea: auto-resize height to fit wrapped content
+        const fn = fd.querySelector('.file-name');
+        function autoSizeFn() {
+          fn.style.height = 'auto';
+          fn.style.height = (fn.scrollHeight) + 'px';
+        }
+        fn.addEventListener('click', e => e.stopPropagation());
+        fn.addEventListener('input', e => {
+          f.name = e.target.value;
+          fn.title = `${f.name} — click to edit · appears in plot legend`;
+          autoSizeFn();
+          redrawAll();
+        });
+        // suppress the literal newline — Enter just commits/blurs
+        fn.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); fn.blur(); }
+        });
+        // initial sizing (do this after the row is in the DOM so scrollHeight is accurate;
+        // we defer via requestAnimationFrame).
+        requestAnimationFrame(autoSizeFn);
+        // column picker (only present if hasCols)
+        const fcol = fd.querySelector('.file-col');
+        if (fcol) {
+          fcol.addEventListener('click', e => e.stopPropagation());
+          fcol.addEventListener('change', e => {
+            const newY = parseInt(e.target.value, 10);
+            f.yCol = newY;
+            const ex = extractCols(f.parsed, f.tCol, newY);
+            f.t = ex.t;
+            f.y = ex.y;
+            ['V','I','Q'].forEach(qq => { if (state.cards[qq]) state.cards[qq].displayUnit = null; });
+            redrawAll();
+            renderSidebar();
+            toast(`column → ${e.target.options[e.target.selectedIndex].text}`);
+          });
+        }
+        // invert button
+        const finv = fd.querySelector('.file-invert');
+        finv.addEventListener('click', e => {
+          e.stopPropagation();
+          f.invert = !f.invert;
+          finv.classList.toggle('on', f.invert);
+          redrawAll();
+          toast(f.invert ? 'inverted' : 'normal');
+        });
+        // type buttons
+        fd.querySelectorAll('.file-type-mini button').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const newT = btn.dataset.t;
+            if (newT === f.type) return;
+            f.type = newT;
+            ['V','I','Q'].forEach(qq => { if (state.cards[qq]) state.cards[qq].displayUnit = null; });
+            render();
+          });
+        });
+        // delete
+        fd.querySelector('.file-x').addEventListener('click', (e) => {
+          e.stopPropagation();
+          s.files = s.files.filter(x => x.id !== f.id);
+          render();
+        });
+        fwrap.appendChild(fd);
+      });
+      wrap.appendChild(fwrap);
+    }
+  });
+  if (!state.samples.length) {
+    list.innerHTML = `<div class="muted" style="text-align:center; padding:14px 0;">— no samples — click + to add</div>`;
+  }
+}
+
+function showColorPicker(sample, anchor) {
+  document.querySelectorAll('.color-pop').forEach(p => p.remove());
+  const pop = document.createElement('div');
+  pop.className = 'color-pop';
+  // Ensure sample has an alpha so the slider has a starting value
+  if (typeof sample.alpha !== 'number') sample.alpha = 1;
+
+  // Palette grid (Origin classic — the curated "auto-assigned" colors)
+  const grid = document.createElement('div');
+  grid.className = 'color-grid';
+  PALETTE.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (sample.color.toLowerCase() === c.toLowerCase() ? ' selected' : '');
+    sw.style.background = c;
+    sw.title = c;
+    sw.addEventListener('click', () => {
+      sample.color = c;
+      // refresh the selected highlight, the preview tile, and the live plots/sidebar
+      grid.querySelectorAll('.color-swatch').forEach(el => el.classList.toggle('selected', el.style.background && rgbToHex(el.style.background).toLowerCase() === c.toLowerCase()));
+      free.value = c;
+      preview.style.background = effectiveColor(sample);
+      hexInput.value = c;
+      renderSidebar(); redrawAll();
+    });
+    grid.appendChild(sw);
+  });
+  pop.appendChild(grid);
+
+  // Free RGB picker + hex input on the same row
+  const freeRow = document.createElement('div');
+  freeRow.className = 'color-free-row';
+  freeRow.innerHTML = `
+    <label class="color-free-label">${t('any_color') || 'any color'}</label>
+    <input type="color" class="color-free" value="${sample.color}" />
+    <input type="text" class="color-hex" value="${sample.color}" maxlength="7" spellcheck="false" />
+  `;
+  pop.appendChild(freeRow);
+  const free    = freeRow.querySelector('.color-free');
+  const hexInput= freeRow.querySelector('.color-hex');
+
+  // Alpha (transparency) slider
+  const alphaRow = document.createElement('div');
+  alphaRow.className = 'color-alpha-row';
+  alphaRow.innerHTML = `
+    <label class="color-free-label">${t('opacity') || 'opacity'}</label>
+    <input type="range" class="color-alpha" min="0" max="1" step="0.01" value="${sample.alpha}" />
+    <span class="color-alpha-val">${Math.round(sample.alpha * 100)}%</span>
+  `;
+  pop.appendChild(alphaRow);
+  const aSlider = alphaRow.querySelector('.color-alpha');
+  const aVal    = alphaRow.querySelector('.color-alpha-val');
+
+  // Preview tile (checkerboard underneath so transparency reads visually)
+  const preview = document.createElement('div');
+  preview.className = 'color-preview';
+  preview.style.background = effectiveColor(sample);
+  pop.appendChild(preview);
+
+  // Wiring
+  free.addEventListener('input', e => {
+    sample.color = e.target.value;
+    hexInput.value = e.target.value;
+    grid.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('selected'));
+    preview.style.background = effectiveColor(sample);
+    renderSidebar(); redrawAll();
+  });
+  hexInput.addEventListener('change', e => {
+    let v = (e.target.value || '').trim();
+    if (!/^#[0-9a-f]{6}$/i.test(v)) {
+      // try repairing common forms (missing #, 3-digit)
+      if (/^[0-9a-f]{6}$/i.test(v)) v = '#' + v;
+      else if (/^#?[0-9a-f]{3}$/i.test(v)) {
+        const m = v.replace('#','');
+        v = '#' + m[0]+m[0]+m[1]+m[1]+m[2]+m[2];
+      } else { e.target.value = sample.color; return; }
+    }
+    sample.color = v;
+    free.value = v;
+    grid.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('selected'));
+    preview.style.background = effectiveColor(sample);
+    renderSidebar(); redrawAll();
+  });
+  aSlider.addEventListener('input', e => {
+    sample.alpha = parseFloat(e.target.value);
+    aVal.textContent = Math.round(sample.alpha * 100) + '%';
+    preview.style.background = effectiveColor(sample);
+    renderSidebar(); redrawAll();
+  });
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  // position to the right of the swatch, clamped to viewport
+  const popW = 240, popH = 220;
+  let left = r.right + 6 + window.scrollX;
+  let top  = r.top  - 4 + window.scrollY;
+  if (left + popW > window.innerWidth) left = Math.max(8, window.innerWidth - popW - 12);
+  if (top  + popH > window.innerHeight + window.scrollY) top = Math.max(8, window.scrollY + window.innerHeight - popH - 12);
+  pop.style.left = left + 'px';
+  pop.style.top  = top  + 'px';
+  const close = (ev) => {
+    if (!pop.contains(ev.target)) { pop.remove(); document.removeEventListener('mousedown', close, true); }
+  };
+  setTimeout(() => document.addEventListener('mousedown', close, true), 0);
+}
+
+/* Quick helper: parses CSS rgb()/rgba()/hex into hex form for comparing against PALETTE. */
+function rgbToHex(s) {
+  if (!s) return '';
+  s = s.trim();
+  if (s.startsWith('#')) return s;
+  const m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i.exec(s);
+  if (!m) return s;
+  const toHex = n => Number(n).toString(16).padStart(2, '0');
+  return '#' + toHex(m[1]) + toHex(m[2]) + toHex(m[3]);
+}
+
+/* ── plot layout ── */
+function aspectH(aspect, w) {
+  const [a, b] = aspect.split(':').map(Number);
+  return Math.max(220, Math.round(w * b / a));
+}
+/* Decide legend placement & margin based on trace count and label length.
+   Few traces with short names → horizontal at top.
+   Many traces or long names → vertical on the right, with extra margin. */
+/* Legend placement (pub style).
+   Auto: upper-left inside the plot; falls back to outside-right when there are
+   too many entries or the names are long. */
+function legendConfig(traces, theme) {
+  const labels = traces.map(tr => (tr.name || '').toString());
+  const n = labels.length;
+  const maxLen = labels.reduce((m, s) => Math.max(m, s.length), 0);
+  const fontSize = state.fonts.legend;
+  const baseFont = { family: 'Arial, Helvetica, sans-serif', size: fontSize, color: theme.label };
+  const transparent = { bgcolor: 'rgba(0,0,0,0)', bordercolor: 'rgba(0,0,0,0)', borderwidth: 0 };
+  const crowded = n >= 5 || maxLen > 26;
+  if (crowded) {
+    const widthGuess = Math.min(360, Math.max(120, Math.round(maxLen * fontSize * 0.55 + 38)));
+    return {
+      legend: {
+        ...transparent, font: baseFont, orientation: 'v',
+        x: 1.015, y: 1, xanchor: 'left', yanchor: 'top',
+        itemwidth: 30, tracegroupgap: 4,
+      },
+      marginR: widthGuess + 28, marginT: 28,
+    };
+  }
+  return {
+    legend: {
+      ...transparent, font: baseFont, orientation: 'v',
+      x: 0.02, y: 0.98, xanchor: 'left', yanchor: 'top',
+    },
+    marginR: 28, marginT: 28,
+  };
+}
+
+/* Publication-style base layout shared by overlay & dual cards.
+   - White plot bg; solid black 4-sided frame (mirror = "allticks" gives top/right rules).
+   - Arial/Helvetica sans-serif on the plot itself (UI uses JetBrains Mono).
+   - Ticks point outward, no SI-prefix scaling on labels (we already chose the unit).
+   - Grid OFF unless user enables it; when on it's 0.5px light gray BEHIND the data. */
+function baseLayout({ xTitle, yTitle, theme }) {
+  const m = autoMargins();
+  const stand = titleStandoff();
+  const axisCommon = {
+    color:        theme.ink,
+    linecolor:    theme.ink,
+    linewidth:    1.3,
+    tickcolor:    theme.ink,
+    tickwidth:    1.0,
+    ticklen:      5,
+    ticks:        state.ticksOutward ? 'outside' : 'inside',
+    mirror:       state.showMirror ? 'allticks' : false,
+    showline:     state.showAxes,
+    zeroline:     false,
+    showgrid:     state.showGrid,
+    gridcolor:    theme.grid,
+    gridwidth:    0.5,
+    tickfont:     { family: 'Arial, Helvetica, sans-serif', size: state.fonts.tickLabel, color: theme.label },
+    exponentformat: 'none',
+    separatethousands: false,
+    automargin:   false,
+  };
+  return {
+    autosize: true,
+    margin: { l: m.l, r: 28, t: 28, b: m.b },
+    plot_bgcolor:  theme.bg,
+    paper_bgcolor: theme.paper,
+    font: { family: 'Arial, Helvetica, sans-serif', color: theme.label, size: state.fonts.tickLabel },
+    xaxis: {
+      ...axisCommon,
+      title: { text: xTitle, font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: theme.label }, standoff: stand },
+    },
+    yaxis: {
+      ...axisCommon,
+      title: { text: yTitle, font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: theme.label }, standoff: stand + 2 },
+    },
+    legend: {
+      bgcolor: 'rgba(0,0,0,0)',
+      bordercolor: 'rgba(0,0,0,0)',
+      borderwidth: 0,
+      font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.legend, color: theme.label },
+      orientation: 'v',
+      x: 0.02, y: 0.98, xanchor: 'left', yanchor: 'top',
+    },
+    showlegend: true,
+    hovermode: 'closest',
+  };
+}
+
+/* ── overlay plot ── */
+function renderOverlay(quantity, container) {
+  const theme = plotTheme();
+  const displayUnit = chooseDisplayUnit(quantity);
+  const tw = resolveTimeWindow(quantity);
+  const traces = [];
+  let anyDownsampled = false;
+  let totalOrig = 0;
+  let totalShown = 0;
+  state.samples.forEach(sample => {
+    if (!sample.visible) return;
+    sample.files.forEach(f => {
+      if (f.type !== quantity) return;
+      const sliced = sliceByTime(f.t, f.y, tw.lo, tw.hi);
+      if (!sliced.t.length) return;
+      const yDisp = siToDisplay(quantity, sliced.y, displayUnit, f.invert);
+      // Display-time downsampling. Stats / CSVs use the full sliced data;
+      // only the plot trace is thinned.
+      const ds = downsampleMinMax(sliced.t, yDisp, MAX_DISPLAY_POINTS);
+      if (ds.downsampled) { anyDownsampled = true; totalOrig += ds.orig; totalShown += ds.t.length; }
+      else { totalOrig += sliced.t.length; totalShown += sliced.t.length; }
+      traces.push({
+        x: ds.t, y: ds.y,
+        type: 'scatter', mode: 'lines',
+        name: `${sample.name} · ${f.name}`,
+        line: {
+          color: effectiveColor(sample),
+          width: state.lineWidth,
+          shape: state.smoothLines ? 'spline' : 'linear',
+          smoothing: state.smoothLines ? 0.5 : 0,
+        },
+        hovertemplate: `${sample.name}<br>${f.name}<br>t=%{x:.4g} s<br>${quantity}=%{y:.4g} ${displayUnit}<extra></extra>`,
+      });
+    });
+  });
+  if (!traces.length) {
+    container.innerHTML = `<div class="muted" style="padding:40px 10px; text-align:center;">${t('no_files_msg')}</div>`;
+    return;
+  }
+  const layout = baseLayout({
+    xTitle: 't (s)',
+    yTitle: axisLabel(quantity, displayUnit),
+    theme
+  });
+  if (anyDownsampled) layout.annotations = [fastModeBadge(totalShown, totalOrig, theme)];
+  const lc = legendConfig(traces, theme);
+  layout.legend = lc.legend;
+  layout.margin.r = lc.marginR;
+  layout.margin.t = lc.marginT;
+  // pin the x-range so the requested window is exact (not auto-padded)
+  if (tw.ext) layout.xaxis.range = [tw.lo, tw.hi];
+  const w = container.clientWidth || 800;
+  const h = aspectH(state.cards[quantity].aspect, w);
+  container.style.height = h + 'px';
+  layout.autosize = false;
+  layout.width    = w;
+  layout.height   = h;
+  Plotly.react(container, traces, layout, { responsive: true, displayModeBar: false });
+  if (window.Plotly && container.layout) {
+    try { Plotly.Plots.resize(container); } catch (e) {}
+  }
+}
+
+/* ── side-by-side: subplots in a row, publication signature view ──
+   v1.3 visual restyle:
+     - Each panel no longer has its own 4-sided box. Inner axis rules are hidden.
+     - A SINGLE outer rectangle is drawn around the whole plot area as a `shape`
+       (paper coords 0..1), so all panels + gaps sit inside one frame.
+     - X-axis tick marks & labels still appear under each panel (so each
+       sample's real time range stays readable).
+     - Y axis title + ticks render only on the leftmost panel.
+     - Gap between panels is 10% of per-panel width (already the default).
+   This is a pure styling change — the per-panel domain math is unchanged. */
+function renderSideBySide(quantity, container) {
+  const theme = plotTheme();
+  const displayUnit = chooseDisplayUnit(quantity);
+  const tw = resolveTimeWindow(quantity);
+  // collect files in order, attaching their sample (pre-slice)
+  const items = [];
+  state.samples.forEach(sample => {
+    if (!sample.visible) return;
+    sample.files.forEach(f => {
+      if (f.type !== quantity) return;
+      const sliced = sliceByTime(f.t, f.y, tw.lo, tw.hi);
+      if (!sliced.t.length) return;
+      items.push({ sample, f, tSliced: sliced.t, ySliced: sliced.y });
+    });
+  });
+  if (!items.length) {
+    container.innerHTML = `<div class="muted" style="padding:40px 10px; text-align:center;">${t('no_files_msg')}</div>`;
+    return;
+  }
+  const N = items.length;
+  // panel-width math: the OUTER edges of the first and last panels align with the
+  // outer box left/right edges (so Y-axis tick marks on the leftmost panel sit
+  // OUTSIDE the box, where they belong). The 10% gap lives BETWEEN consecutive
+  // panels only. A separate xaxis.range padding (below) gives the data line
+  // visual margin from each panel's box edge — that's the "space before the
+  // graph line starts" the user asked for, without dragging the ticks inside.
+  const gapPct = 10;
+  const W = 1 / (N + (N - 1) * gapPct / 100);
+  const gap = (gapPct / 100) * W;
+  // Fraction of each panel's data-range that's padded on EACH side so the trace
+  // doesn't kiss the panel edges. Pure visual margin — does not change the axis
+  // ticks (Plotly still places nice round-number ticks within the original range).
+  const dataPadFrac = 0.05;
+  const m = autoMargins();
+  const stand = titleStandoff();
+
+  // Constant top breathing room — there's no panel label to make space for any more.
+  const topMargin = 28;
+
+  const traces = [];
+  const layout = {
+    autosize: true,
+    margin: { l: m.l, r: 28, t: topMargin, b: m.b },
+    plot_bgcolor:  theme.bg,
+    paper_bgcolor: theme.paper,
+    font: { family: 'Arial, Helvetica, sans-serif', color: theme.label, size: state.fonts.tickLabel },
+    showlegend: false,
+    hovermode: 'closest',
+    // single outer rectangle around the whole plot area (all panels + gaps inside)
+    shapes: [{
+      type: 'rect',
+      xref: 'paper', yref: 'paper',
+      x0: 0, y0: 0, x1: 1, y1: 1,
+      line: { color: theme.ink, width: 1.3 },
+      fillcolor: 'rgba(0,0,0,0)',
+      layer: 'above',
+    }],
+  };
+  // compute global y range so panels share scale (Y is "shared" per spec)
+  let gMin = Infinity, gMax = -Infinity;
+  items.forEach(({f, ySliced}) => {
+    const y = siToDisplay(quantity, ySliced, displayUnit, f.invert);
+    for (const v of y) { if (v < gMin) gMin = v; if (v > gMax) gMax = v; }
+  });
+  const pad = (gMax - gMin) * 0.06 || 1;
+  gMin -= pad; gMax += pad;
+
+  // Per-panel pixel width — used to auto-pick a tick count that fits without
+  // crowding. Used by Plotly's tickmode='auto' as a soft cap; the actual ticks
+  // it picks are still nice round numbers (1,2,3 / 0,5,10 / etc.).
+  const wPxRaw  = container.clientWidth || 800;
+  const plotPxW = Math.max(100, wPxRaw - m.l - 28);
+  const perPanelPx = W * plotPxW;
+  const minTickPx = Math.max(34, state.fonts.tickLabel * 3);   // px between two tick centers
+  const panelNticks = Math.max(2, Math.min(8, Math.floor(perPanelPx / minTickPx)));
+
+  let anyDownsampled = false;
+  let totalOrig = 0, totalShown = 0;
+
+  items.forEach(({sample, f, tSliced, ySliced}, i) => {
+    const xax = i === 0 ? 'x' : `x${i+1}`;
+    const yax = i === 0 ? 'y' : `y${i+1}`;
+    const yDispRaw = siToDisplay(quantity, ySliced, displayUnit, f.invert);
+    const ds = downsampleMinMax(tSliced, yDispRaw, MAX_DISPLAY_POINTS);
+    if (ds.downsampled) { anyDownsampled = true; totalOrig += ds.orig; totalShown += ds.t.length; }
+    else { totalOrig += tSliced.length; totalShown += tSliced.length; }
+    traces.push({
+      x: ds.t, y: ds.y,
+      xaxis: xax, yaxis: yax,
+      type: 'scatter', mode: 'lines',
+      name: `${sample.name} · ${f.name}`,
+      line: {
+        color: effectiveColor(sample),
+        width: state.lineWidth,
+        shape: state.smoothLines ? 'spline' : 'linear',
+        smoothing: state.smoothLines ? 0.5 : 0,
+      },
+      hovertemplate: `${sample.name}<br>${f.name}<br>t=%{x:.4g} s<br>%{y:.4g} ${displayUnit}<extra></extra>`,
+    });
+    const x0 = i * (W + gap);
+    const x1 = x0 + W;
+    const xKey = `xaxis${i === 0 ? '' : (i+1)}`;
+    const yKey = `yaxis${i === 0 ? '' : (i+1)}`;
+    // Per-panel axes: NO axis line (showline:false), NO mirror.
+    // Ticks + tick labels stay visible so the reader sees each sample's real time.
+    //
+    // Pad the X data range by `dataPadFrac` on each side. This shifts the data
+    // line inward from the panel's box edge by that fraction — i.e. visual margin
+    // between the trace and the outer box, without moving the AXIS (and so
+    // without moving the ticks/labels which we want OUTSIDE the box).
+    const tLo_i = tSliced[0];
+    const tHi_i = tSliced[tSliced.length - 1];
+    const tSpan = (tHi_i - tLo_i) || 1;
+    const xPad = tSpan * dataPadFrac;
+    layout[xKey] = {
+      domain: [x0, x1],
+      anchor: yax,
+      range: [tLo_i - xPad, tHi_i + xPad],
+      // No per-panel title — a single common 't (s)' annotation appears
+      // centered below the whole strip (added to layout.annotations below).
+      title: { text: '' },
+      color: theme.ink,
+      linecolor: theme.ink, linewidth: 1.3,
+      tickcolor: theme.ink, tickwidth: 1.0, ticklen: 5,
+      ticks: state.ticksOutward ? 'outside' : 'inside',
+      mirror: false, showline: false, zeroline: false,
+      showgrid: state.showGrid, gridcolor: theme.grid, gridwidth: 0.5,
+      tickfont: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.tickLabel, color: theme.label },
+      // Force horizontal labels (never rotate / never upside-down) and let
+      // Plotly choose `nice` round-number ticks within the panelNticks budget.
+      tickangle: 0,
+      tickmode: 'auto',
+      nticks: panelNticks,
+      automargin: false,
+      exponentformat: 'none',
+    };
+    layout[yKey] = {
+      anchor: xax,
+      range: [gMin, gMax],
+      domain: [0, 1],
+      title: i === 0 ? { text: axisLabel(quantity, displayUnit), font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: theme.label }, standoff: stand + 2 } : '',
+      showticklabels: i === 0,
+      color: theme.ink,
+      linecolor: theme.ink, linewidth: 1.3,
+      tickcolor: theme.ink, tickwidth: 1.0, ticklen: 5,
+      // Y-axis tick MARKS only on the leftmost panel — otherwise they bleed
+      // out into the gaps between panels as little horizontal dashes.
+      ticks: i === 0 ? (state.ticksOutward ? 'outside' : 'inside') : '',
+      mirror: false, showline: false, zeroline: false,
+      showgrid: state.showGrid, gridcolor: theme.grid, gridwidth: 0.5,
+      tickfont: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.tickLabel, color: theme.label },
+      exponentformat: 'none',
+    };
+  });
+  // Single common 't (s)' label centered below the strip — replaces the
+  // per-panel titles that used to repeat "5 6 7 t (s)  5 6 7 t (s)  …".
+  // Positioned below the tick labels via a paper-y < 0 annotation.
+  layout.annotations = [{
+    text: 't (s)',
+    showarrow: false,
+    xref: 'paper', yref: 'paper',
+    x: 0.5, y: 0,
+    xanchor: 'center', yanchor: 'top',
+    yshift: -(state.fonts.tickLabel + 18),     // sits below the tick labels
+    font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: theme.label },
+  }];
+  if (anyDownsampled) layout.annotations.push(fastModeBadge(totalShown, totalOrig, theme));
+  // Make room below for the common label.
+  layout.margin.b = Math.max(layout.margin.b, state.fonts.tickLabel + state.fonts.axisTitle + 36);
+
+  const wPx = container.clientWidth || 800;
+  const hPx = aspectH(state.cards[quantity].aspect, wPx);
+  container.style.height = hPx + 'px';
+  // explicit dims so aspect-ratio changes are picked up reliably by Plotly.react
+  layout.autosize = false;
+  layout.width    = wPx;
+  layout.height   = hPx;
+  Plotly.react(container, traces, layout, { responsive: true, displayModeBar: false });
+  if (window.Plotly && container.layout) {
+    try { Plotly.Plots.resize(container); } catch (e) {}
+  }
+}
+
+/* ── stat panel per quantity card ──
+   Spec says these are computed on the FULL signal, not the windowed view, so the user
+   can verify auto-unit-pick and spot outliers before plotting. Duration shown is the
+   currently-shown window though, since that's what the plot is actually displaying. */
+function renderQuantityStats(quantity, host) {
+  const displayUnit = chooseDisplayUnit(quantity);
+  host.innerHTML = '';
+  state.samples.forEach(sample => {
+    if (!sample.visible) return;
+    sample.files.forEach(f => {
+      if (f.type !== quantity) return;
+      if (!f.t.length) return;
+      const y = siToDisplay(quantity, f.y, displayUnit, f.invert);
+      const st = fileStats(y);
+      if (!st) return;
+      const dur = f.t[f.t.length-1] - f.t[0];
+      const cell = document.createElement('div');
+      cell.className = 'stat-cell';
+      cell.style.borderLeftColor = effectiveColor(sample);
+      cell.innerHTML = `
+        <div class="k" title="${escapeAttr(sample.name)} · ${escapeAttr(f.name)}">${escapeAttr(sample.name)} · ${escapeAttr(f.name)}</div>
+        <div class="stat-row"><span class="lbl">${t('max_peak')}</span><span class="val">${fmt(st.max_peak)}<em>${displayUnit}</em></span></div>
+        <div class="stat-row"><span class="lbl">${t('mean_peak')}</span><span class="val">${fmt(st.mean_peak)}<em>${displayUnit}</em></span></div>
+        <div class="stat-row"><span class="lbl">${t('peak_to_peak')}</span><span class="val">${fmt(st.peak_to_peak)}<em>${displayUnit}</em></span></div>
+        <div class="stat-row"><span class="lbl">${t('rms')}</span><span class="val">${fmt(st.rms)}<em>${displayUnit}</em></span></div>
+        <div class="stat-row"><span class="lbl">${t('mean')} ± ${t('std')}</span><span class="val">${fmt(st.mean)} ± ${fmt(st.std)}</span></div>
+        <div class="stat-row"><span class="lbl">${t('duration')}</span><span class="val">${fmt(dur, 3)}<em>s</em></span></div>
+      `;
+      host.appendChild(cell);
+    });
+  });
+}
+
+/* ── comparison card ──
+   Sample-level X axis: one tick per (visible AND not-hidden-in-this-card) sample.
+   When a sample has more than one file of the relevant quantity, its value is the
+   MEAN of the per-file metric values, all computed on the data WITHIN that
+   quantity's current time window (so the comparison respects what the V/I/Q
+   cards are showing).
+   Up to 3 series, each on its own Y axis (left, right1, right2) with the axis
+   line, ticks, tick labels, and title all tinted to the series' color (Origin
+   look). Origin-style markers via Plotly's marker.gradient=radial. */
+function renderCompare(container) {
+  const theme = plotTheme();
+  const seriesList = (state.compare.series || []).slice(0, 3);
+
+  // 1. samples that are eligible — globally visible AND not hidden in this card.
+  const hidden = new Set(state.compare.hiddenSampleIds || []);
+  const samples = state.samples.filter(s => s.visible && s.files.length && !hidden.has(s.id));
+  if (!seriesList.length || !samples.length) {
+    container.innerHTML = `<div class="muted" style="padding:24px 10px; text-align:center;">${t('no_compare_msg')}</div>`;
+    return;
+  }
+
+  const xLabels = samples.map(s => s.name);
+  const chart   = state.compare.chart || 'line_markers';
+  // Bar is now allowed even with multiple series — we use barmode='group' below
+  // to get the Origin look (one bar per series per X category, side-by-side).
+  const effectiveChart = chart;
+
+  // 2. for each series, build the traces & remember the series color so we can
+  //    tint the corresponding Y axis with it.
+  const traces = [];
+  const seriesColors = [];
+  const seriesMeta = []; // {title, color, axisName}
+
+  seriesList.forEach((s, idx) => {
+    const quantity = s.quantity;
+    const metric   = s.metric;
+    const displayUnit = chooseDisplayUnit(quantity);
+    const tw = resolveTimeWindow(quantity);
+    const color = COMPARE_SERIES_COLORS[idx];
+    seriesColors.push(color);
+
+    // For each sample, mean of per-file metric values (filtered to time window).
+    const ys = samples.map(samp => {
+      const files = samp.files.filter(f => f.type === quantity);
+      if (!files.length) return null;
+      const vals = [];
+      files.forEach(f => {
+        const sliced = sliceByTime(f.t, f.y, tw.lo, tw.hi);
+        if (!sliced.t.length) return;
+        const yDisp = siToDisplay(quantity, sliced.y, displayUnit, f.invert);
+        const st = fileStats(yDisp);
+        if (st && Number.isFinite(st[metric])) vals.push(st[metric]);
+      });
+      if (!vals.length) return null;
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    });
+
+    const axisName = idx === 0 ? 'y' : `y${idx + 1}`;
+    const seriesTitle = compareSeriesLabel(quantity, metric, displayUnit);
+    seriesMeta.push({ title: seriesTitle, color, axisName: idx === 0 ? 'yaxis' : `yaxis${idx + 1}` });
+
+    if (effectiveChart === 'bar') {
+      traces.push({
+        type: 'bar',
+        x: xLabels, y: ys,
+        marker: { color, line: { color: theme.ink, width: 1 } },
+        width: state.barWidth,
+        yaxis: axisName,
+        name: seriesTitle,
+        hovertemplate: '%{x}<br>%{y:.4g} ' + displayUnit + '<extra>' + seriesTitle + '</extra>',
+      });
+    } else {
+      const mode = (effectiveChart === 'line_markers') ? 'lines+markers'
+                 : (effectiveChart === 'line')         ? 'lines'
+                 : 'markers';
+      // Origin-style 3D marker: a radial gradient from a lighter inner color to
+      // the series color, with a slightly darker outline. Plotly supports this
+      // directly via marker.gradient (type='radial', color=<inner color>).
+      const lightFill = shadeColor(color, 45);
+      const darkLine  = shadeColor(color, -25);
+      traces.push({
+        type: 'scatter',
+        mode,
+        x: xLabels, y: ys,
+        line: (mode === 'markers') ? undefined : { color, width: 2, shape: 'linear' },
+        marker: (mode === 'lines') ? undefined : {
+          color,
+          size: state.markerSize,
+          line: { color: darkLine, width: 1 },
+          gradient: { type: 'radial', color: lightFill },
+        },
+        yaxis: axisName,
+        name: seriesTitle,
+        connectgaps: false,
+        hovertemplate: '%{x}<br>%{y:.4g} ' + displayUnit + '<extra>' + seriesTitle + '</extra>',
+      });
+    }
+  });
+
+  // 3. layout — start from baseLayout, then override axes for the multi-Y case.
+  // We deliberately set a faint horizontal grid on the LEFT Y axis so the
+  // chart has the Origin look even when the global "showGrid" toggle is off.
+  const layout = baseLayout({ xTitle: '', yTitle: seriesMeta[0].title, theme });
+  layout.showlegend = false;     // the sticky sample-legend card covers this
+  if (state.compare.yscale === 'log') layout.yaxis.type = 'log';
+
+  // X axis (category)
+  layout.xaxis.type = 'category';
+  layout.xaxis.tickvals = xLabels;
+  layout.xaxis.ticktext = xLabels;
+  if (xLabels.length > 6) {
+    layout.xaxis.tickangle = -30;
+    layout.margin.b = Math.max(layout.margin.b, 100);
+  }
+
+  // Y axis 1 styling — tint to series-1 color + horizontal grid (Origin look).
+  const tintAxis = (axisObj, color) => {
+    axisObj.color      = color;
+    axisObj.linecolor  = color;
+    axisObj.tickcolor  = color;
+    if (axisObj.tickfont) axisObj.tickfont = { ...axisObj.tickfont, color };
+    if (axisObj.title && axisObj.title.font) {
+      axisObj.title.font = { ...axisObj.title.font, color };
+    }
+  };
+  tintAxis(layout.yaxis, seriesColors[0]);
+  layout.yaxis.showgrid  = true;
+  layout.yaxis.gridcolor = 'rgba(0,0,0,0.08)';
+  layout.yaxis.gridwidth = 0.5;
+  layout.yaxis.zeroline  = false;
+
+  // ── Multi-Y-axis positioning ──
+  // 1 axis: yaxis on left, x domain [0, 1]
+  // 2 axes: yaxis left, yaxis2 on right at the right edge of x; x domain [0, 1]
+  // 3 axes: yaxis left, yaxis2 + yaxis3 BOTH on the right with anchor='free' and
+  //         explicit positions; we shrink the x domain so there is room between
+  //         the two right axes for yaxis2's tick labels (which extend rightward
+  //         from its axis line). The right margin then accommodates yaxis3's
+  //         tick labels + title past paper-x=1.0. No overlap is possible.
+  const nAxes = seriesList.length;
+  if (seriesList[1]) {
+    const ax = {
+      ...layout.yaxis,
+      overlaying: 'y',
+      side: 'right',
+      showgrid: false,
+      zeroline: false,
+      title: {
+        text: seriesMeta[1].title,
+        font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: seriesColors[1] },
+        standoff: titleStandoff() + 2,
+      },
+    };
+    if (nAxes === 3) {
+      ax.anchor = 'free';
+      ax.position = 0.78;        // ← axis line at paper-x = 0.78
+    }
+    tintAxis(ax, seriesColors[1]);
+    if (state.compare.yscale === 'log') ax.type = 'log';
+    layout.yaxis2 = ax;
+  }
+  if (seriesList[2]) {
+    const ax = {
+      ...layout.yaxis,
+      overlaying: 'y',
+      side: 'right',
+      anchor: 'free',
+      position: 0.92,            // ← axis line at paper-x = 0.92 (10% gap past yaxis2)
+      showgrid: false,
+      zeroline: false,
+      title: {
+        text: seriesMeta[2].title,
+        font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: seriesColors[2] },
+        standoff: titleStandoff() + 2,
+      },
+    };
+    tintAxis(ax, seriesColors[2]);
+    if (state.compare.yscale === 'log') ax.type = 'log';
+    layout.yaxis3 = ax;
+  }
+  // Shrink the plot area to make room for the right-side Y axes & their labels.
+  if (nAxes === 3)      layout.xaxis.domain = [0, 0.78];
+  else if (nAxes === 2) layout.xaxis.domain = [0, 1];     // default
+  else                  layout.xaxis.domain = [0, 1];
+
+  // Bar (Origin grouped style): when multiple bar traces share an x value, plotly
+  // places them side-by-side automatically with barmode='group'.
+  if (effectiveChart === 'bar' && nAxes > 1) {
+    layout.barmode = 'group';
+    layout.bargap   = 0.25;
+    layout.bargroupgap = 0.08;
+  }
+
+  // Margins: left already accounts for Y1 (in baseLayout). Right accounts for
+  // Y2 and Y3 if present.
+  const tickW  = state.fonts.tickLabel * 3.5;
+  const axisH  = state.fonts.axisTitle;
+  const perAxis = tickW + axisH + 26;
+  if (nAxes === 1)      layout.margin.r = 28;
+  else if (nAxes === 2) layout.margin.r = Math.round(perAxis);
+  else                  layout.margin.r = Math.round(perAxis * 1.2);
+
+  // Explicit width/height + autosize:false. We override the autosize from
+  // baseLayout because Plotly.react sometimes ignores container CSS-only
+  // height changes; supplying them in the layout makes the resize reliable.
+  const wPx = container.clientWidth || 800;
+  const hPx = aspectH(state.cards.cmp.aspect, wPx);
+  container.style.height = hPx + 'px';
+  layout.autosize = false;
+  layout.width    = wPx;
+  layout.height   = hPx;
+
+  Plotly.react(container, traces, layout, { responsive: true, displayModeBar: false });
+  // Safety net: in case Plotly cached a stale size, force-resize to current dims.
+  if (window.Plotly && container.layout) {
+    try { Plotly.Plots.resize(container); } catch (e) {}
+  }
+}
+
+/* ── dual-axis V & I card (publication twin-Y) ──
+   - Left Y tinted to the V trace color (line, ticks, labels, title all match).
+   - Right Y tinted to the I trace color.
+   - X-axis black, mirrored on top (Y axes are NOT mirrored since right side belongs to a different axis).
+   - One legend listing all V and I traces with (V)/(I) suffix. */
+function renderDual(container) {
+  const theme = plotTheme();
+  const sId = state.cards.dual.sampleId;
+  const sample = state.samples.find(s => s.id === sId);
+  if (!sample) {
+    container.innerHTML = `<div class="muted" style="padding:24px 10px; text-align:center;">${t('no_compare_msg')}</div>`;
+    return;
+  }
+  const vFiles = sample.files.filter(f => f.type === 'V');
+  const iFiles = sample.files.filter(f => f.type === 'I');
+  if (!vFiles.length && !iFiles.length) {
+    container.innerHTML = `<div class="muted" style="padding:24px 10px; text-align:center;">${t('no_compare_msg')}</div>`;
+    return;
+  }
+  const vUnit = chooseDisplayUnit('V');
+  const iUnit = chooseDisplayUnit('I');
+  // determine a usable time-extent for the dual card (intersection of available data)
+  const tcard = state.cards.dual;
+  let lo = Infinity, hi = -Infinity;
+  [...vFiles, ...iFiles].forEach(f => {
+    if (!f.t.length) return;
+    if (f.t[0] < lo) lo = f.t[0];
+    if (f.t[f.t.length-1] > hi) hi = f.t[f.t.length-1];
+  });
+  const tLo = (tcard.timeStart != null) ? tcard.timeStart : lo;
+  const tHi = (tcard.timeEnd   != null) ? tcard.timeEnd   : hi;
+  // pick a palette color for V and I respectively (so they read distinctly on white).
+  // We use Origin red for V and Origin blue for I — high contrast, distinguishable to
+  // colorblind readers, and contrasting with each other.
+  const V_COLOR = '#E60000';
+  const I_COLOR = '#0000FF';
+  const traces = [];
+  let anyDownsampled = false;
+  let totalOrig = 0, totalShown = 0;
+  vFiles.forEach((f, idx) => {
+    const sliced = sliceByTime(f.t, f.y, tLo, tHi);
+    if (!sliced.t.length) return;
+    const yDisp = siToDisplay('V', sliced.y, vUnit, f.invert);
+    const ds = downsampleMinMax(sliced.t, yDisp, MAX_DISPLAY_POINTS);
+    if (ds.downsampled) { anyDownsampled = true; totalOrig += ds.orig; totalShown += ds.t.length; }
+    else { totalOrig += sliced.t.length; totalShown += sliced.t.length; }
+    traces.push({
+      x: ds.t, y: ds.y, name: `${f.name} (V)`,
+      type: 'scatter', mode: 'lines', yaxis: 'y',
+      line: { color: V_COLOR, width: state.lineWidth, shape: state.smoothLines?'spline':'linear', smoothing: state.smoothLines?0.5:0 },
+    });
+  });
+  iFiles.forEach((f, idx) => {
+    const sliced = sliceByTime(f.t, f.y, tLo, tHi);
+    if (!sliced.t.length) return;
+    const yDisp = siToDisplay('I', sliced.y, iUnit, f.invert);
+    const ds = downsampleMinMax(sliced.t, yDisp, MAX_DISPLAY_POINTS);
+    if (ds.downsampled) { anyDownsampled = true; totalOrig += ds.orig; totalShown += ds.t.length; }
+    else { totalOrig += sliced.t.length; totalShown += sliced.t.length; }
+    traces.push({
+      x: ds.t, y: ds.y, name: `${f.name} (I)`,
+      type: 'scatter', mode: 'lines', yaxis: 'y2',
+      line: { color: I_COLOR, width: state.lineWidth, shape: state.smoothLines?'spline':'linear', smoothing: state.smoothLines?0.5:0 },
+    });
+  });
+  if (!traces.length) {
+    container.innerHTML = `<div class="muted" style="padding:24px 10px; text-align:center;">${t('no_compare_msg')}</div>`;
+    return;
+  }
+  const layout = baseLayout({ xTitle: 't (s)', yTitle: axisLabel('V', vUnit), theme });
+  if (anyDownsampled) layout.annotations = [fastModeBadge(totalShown, totalOrig, theme)];
+  // X axis stays mirrored (top rule). Y axes NOT mirrored since they differ.
+  layout.xaxis.mirror = state.showMirror ? 'allticks' : false;
+  if (isFinite(tLo) && isFinite(tHi)) layout.xaxis.range = [tLo, tHi];
+  // tint left Y to V color
+  layout.yaxis.color = V_COLOR;
+  layout.yaxis.linecolor = V_COLOR;
+  layout.yaxis.tickcolor = V_COLOR;
+  layout.yaxis.mirror = false;
+  layout.yaxis.title.font.color = V_COLOR;
+  layout.yaxis.tickfont.color = V_COLOR;
+  // right Y for I
+  layout.yaxis2 = {
+    title: { text: axisLabel('I', iUnit), font: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.axisTitle, color: I_COLOR }, standoff: titleStandoff() + 2 },
+    overlaying: 'y', side: 'right',
+    color: I_COLOR, linecolor: I_COLOR, linewidth: 1.3,
+    tickcolor: I_COLOR, tickwidth: 1.0, ticklen: 5,
+    ticks: state.ticksOutward ? 'outside' : 'inside',
+    mirror: false, showline: state.showAxes, zeroline: false,
+    showgrid: false,
+    tickfont: { family: 'Arial, Helvetica, sans-serif', size: state.fonts.tickLabel, color: I_COLOR },
+    exponentformat: 'none',
+  };
+  layout.margin.r = Math.max(layout.margin.r, autoMargins().l);   // mirror left padding on right side
+  layout.margin.t = 28;
+  // single legend (use legendConfig so it adapts when trace count is large)
+  const lc = legendConfig(traces, theme);
+  layout.legend = lc.legend;
+  if (lc.marginR > layout.margin.r) layout.margin.r = lc.marginR;
+  const wPx = container.clientWidth || 800;
+  const hPx = aspectH(state.cards.dual.aspect, wPx);
+  container.style.height = hPx + 'px';
+  layout.autosize = false;
+  layout.width    = wPx;
+  layout.height   = hPx;
+  Plotly.react(container, traces, layout, { responsive: true, displayModeBar: false });
+  if (window.Plotly && container.layout) {
+    try { Plotly.Plots.resize(container); } catch (e) {}
+  }
+}
+
+function getCSSVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+/* ── Sample Legend card ──
+   A small standalone figure that shows each visible sample's name with a colored line
+   swatch. Useful as a separate downloadable "key" when the side-by-side panels already
+   carry per-panel labels and a legend on the plot itself would be redundant. */
+function renderSampleLegend(container) {
+  const theme = plotTheme();
+  const visibleSamples = state.samples.filter(s => s.visible && s.files.length > 0);
+  if (!visibleSamples.length) {
+    container.innerHTML = `<div class="muted" style="padding:18px 10px; text-align:center;">${t('no_files_msg')}</div>`;
+    return;
+  }
+  // One scatter trace per sample. We use a tiny invisible line outside the axis
+  // range so the legend has an entry but no glyph appears on the canvas.
+  const traces = visibleSamples.map(s => ({
+    x: [-10, -9], y: [-10, -9],
+    type: 'scatter', mode: 'lines',
+    name: s.name,
+    line: { color: effectiveColor(s), width: Math.max(3, state.lineWidth) },
+    showlegend: true,
+    hoverinfo: 'skip',
+  }));
+  const fs = state.fonts.legend;
+  const layout = {
+    autosize: true,
+    margin: { l: 8, r: 8, t: 8, b: 8 },
+    plot_bgcolor:  theme.bg,
+    paper_bgcolor: theme.paper,
+    xaxis: { visible: false, range: [0, 1], fixedrange: true },
+    yaxis: { visible: false, range: [0, 1], fixedrange: true },
+    showlegend: true,
+    legend: {
+      bgcolor: 'rgba(0,0,0,0)', bordercolor: 'rgba(0,0,0,0)', borderwidth: 0,
+      font: { family: 'Arial, Helvetica, sans-serif', size: fs, color: theme.label },
+      orientation: 'v',
+      x: 0.5, y: 0.5, xanchor: 'center', yanchor: 'middle',
+      itemwidth: 40, tracegroupgap: 4,
+    },
+    hovermode: false,
+  };
+  // height grows with sample count so all entries are readable
+  const h = Math.max(70, visibleSamples.length * Math.round(fs * 1.8) + 24);
+  container.style.height = h + 'px';
+  Plotly.react(container, traces, layout, { responsive: true, displayModeBar: false });
+  if (window.Plotly && container.layout) {
+    try { Plotly.Plots.resize(container); } catch (e) {}
+  }
+}
+
+function buildLegendCard() {
+  const card = document.createElement('div');
+  card.className = 'plot-card legend-card-fixed';
+  card.innerHTML = `
+    <div class="plot-head">
+      <h3 class="plot-title">${t('legend_title')}</h3>
+      <div class="plot-toolbar">
+        <button class="btn icon" data-fontbtn="legend" title="${t('fonts')}">A</button>
+        ${formatSelect2('legend')}
+        <button class="btn icon" data-dl="legend" title="${t('download')}">⇣</button>
+      </div>
+    </div>
+    <div class="plot-body" id="plot-legend"></div>
+  `;
+  card.querySelector(`[data-format="legend"]`).addEventListener('change', e => state.cards.legend.format = e.target.value);
+  card.querySelector(`[data-fontbtn="legend"]`).addEventListener('click', e => openFontPop(e.currentTarget));
+  card.querySelector(`[data-dl="legend"]`).addEventListener('click', () => downloadPlot('plot-legend', 'legend', t('legend_title')));
+  return card;
+}
+
+/* ── card builders ── */
+function buildQuantityCard(q) {
+  const card = document.createElement('div');
+  card.className = 'plot-card';
+  const currentUnit = chooseDisplayUnit(q);
+  const unitOpts = UNITS[q].map(u =>
+    `<option value="${u}" ${u===currentUnit?'selected':''}>${u}</option>`
+  ).join('');
+  const ext = timeExtent(q) || { lo: 0, hi: 1 };
+  const sc = state.cards[q];
+  const tStart = (sc.timeStart != null) ? sc.timeStart : ext.lo;
+  const tEnd   = (sc.timeEnd   != null) ? sc.timeEnd   : ext.hi;
+  const isAll  = (sc.timeStart == null && sc.timeEnd == null);
+  // step for the inputs/slider — adapt to the data range
+  const span = Math.max(ext.hi - ext.lo, 1e-9);
+  const step = span > 100 ? 0.5 : span > 10 ? 0.1 : span > 1 ? 0.01 : 0.001;
+  // friendly fmt for the slider readout
+  const fmtT = v => isFinite(v) ? (Math.abs(v) >= 1000 ? v.toExponential(3) : v.toFixed(step < 0.01 ? 4 : step < 0.1 ? 3 : 2)) : '—';
+
+  card.innerHTML = `
+    <div class="plot-head">
+      <h3 class="plot-title">${t('plot_' + QUANTITY_NAME[q])} <em>${t('vs_time')}</em><span class="badge ${q}">${q}</span></h3>
+      <div class="plot-toolbar">
+        <label class="muted" style="margin-right:2px;">${t('display_unit') || 'unit'}:</label>
+        <select class="select-mini" data-unit="${q}" title="${t('display_unit') || 'display unit'}">${unitOpts}</select>
+        ${aspectSelect(q)}
+        <button class="btn icon" data-fontbtn="${q}" title="${t('fonts')}">A</button>
+        ${formatSelect(q)}
+        <button class="btn icon" data-dl="${q}" title="${t('download')}">⇣</button>
+        <button class="btn icon csv-btn" data-csv-data="${q}" title="${t('csv_data') || 'data CSV'}">CSV</button>
+        <button class="btn icon csv-btn" data-csv-stats="${q}" title="${t('csv_stats') || 'stats CSV'}">∑</button>
+      </div>
+    </div>
+
+    <div class="time-controls">
+      <div class="tc-row1">
+        <span class="tc-label">${t('time_window') || 'time range'}</span>
+        <div class="tc-inputs">
+          <span class="tc-mini-label">${t('start') || 'start'}</span>
+          <input type="number" class="tc-input" data-tw-start="${q}" step="${step}" value="${isAll ? '' : tStart}" placeholder="${fmtT(ext.lo)}" />
+          <span class="tc-dash">→</span>
+          <span class="tc-mini-label">${t('end') || 'end'}</span>
+          <input type="number" class="tc-input" data-tw-end="${q}" step="${step}" value="${isAll ? '' : tEnd}" placeholder="${fmtT(ext.hi)}" />
+          <span class="tc-unit">s</span>
+        </div>
+        <div class="seg" data-seg="tw-${q}" title="quick window (end = start + N)">
+          <button data-w="2"   class="${(!isAll && (tEnd-tStart).toFixed(6)==(2).toFixed(6))?'on':''}">+2s</button>
+          <button data-w="5"   class="${(!isAll && (tEnd-tStart).toFixed(6)==(5).toFixed(6))?'on':''}">+5s</button>
+          <button data-w="10"  class="${(!isAll && (tEnd-tStart).toFixed(6)==(10).toFixed(6))?'on':''}">+10s</button>
+          <button data-w="all" class="${isAll?'on':''}">${t('all') || 'all'}</button>
+        </div>
+      </div>
+      <div class="tc-row2">
+        <div class="range-slider" data-rs="${q}">
+          <div class="rs-track"></div>
+          <div class="rs-range" data-rs-range></div>
+          <input type="range" class="rs-input rs-lo" data-rs-lo="${q}" min="${ext.lo}" max="${ext.hi}" step="${step}" value="${tStart}">
+          <input type="range" class="rs-input rs-hi" data-rs-hi="${q}" min="${ext.lo}" max="${ext.hi}" step="${step}" value="${tEnd}">
+        </div>
+        <span class="tc-hint" data-tw-info="${q}">
+          data: ${fmtT(ext.lo)} → ${fmtT(ext.hi)} s  ·  ${(ext.hi-ext.lo).toFixed(3)}s span
+        </span>
+      </div>
+    </div>
+
+    <div class="plot-body" id="plot-${q}"></div>
+    <div class="stat-grid" id="stats-${q}"></div>
+  `;
+
+  // ── helpers to keep the range slider visual track + inputs in sync
+  const sliderEl = card.querySelector(`[data-rs="${q}"]`);
+  const rangeBar = sliderEl.querySelector('[data-rs-range]');
+  const loInp = card.querySelector(`[data-rs-lo="${q}"]`);
+  const hiInp = card.querySelector(`[data-rs-hi="${q}"]`);
+  const startInp = card.querySelector(`[data-tw-start="${q}"]`);
+  const endInp   = card.querySelector(`[data-tw-end="${q}"]`);
+  function updateBar() {
+    const min = parseFloat(loInp.min), max = parseFloat(loInp.max);
+    const lo = parseFloat(loInp.value), hi = parseFloat(hiInp.value);
+    const a = ((lo - min) / (max - min)) * 100;
+    const b = ((hi - min) / (max - min)) * 100;
+    rangeBar.style.left = a + '%';
+    rangeBar.style.width = Math.max(0, b - a) + '%';
+  }
+  function commitFromSlider() {
+    let lo = parseFloat(loInp.value);
+    let hi = parseFloat(hiInp.value);
+    if (lo > hi - parseFloat(loInp.step)) lo = hi - parseFloat(loInp.step);
+    loInp.value = lo;
+    sc.timeStart = lo;
+    sc.timeEnd   = hi;
+    startInp.value = lo;
+    endInp.value   = hi;
+    updateBar();
+    // clear the "+N" quick buttons unless it matches
+    const dur = hi - lo;
+    card.querySelectorAll(`[data-seg="tw-${q}"] button`).forEach(b => {
+      const v = b.dataset.w;
+      b.classList.toggle('on', v !== 'all' && Math.abs(parseFloat(v) - dur) < 1e-6);
+    });
+    drawCard(q);
+  }
+  updateBar();
+
+  // wire — unit
+  card.querySelector(`[data-unit="${q}"]`).addEventListener('change', e => {
+    sc.displayUnit = e.target.value;
+    drawCard(q);
+  });
+  // time-window quick buttons (+2/+5/+10/all)
+  card.querySelectorAll(`[data-seg="tw-${q}"] button`).forEach(b => {
+    b.addEventListener('click', () => {
+      const v = b.dataset.w;
+      if (v === 'all') {
+        sc.timeStart = null;
+        sc.timeEnd   = null;
+        startInp.value = '';
+        endInp.value   = '';
+        loInp.value = ext.lo;
+        hiInp.value = ext.hi;
+      } else {
+        const dur = parseFloat(v);
+        // anchor on current start (or ext.lo)
+        const lo = (sc.timeStart != null) ? sc.timeStart : ext.lo;
+        const hi = Math.min(lo + dur, ext.hi);
+        sc.timeStart = lo;
+        sc.timeEnd   = hi;
+        startInp.value = lo;
+        endInp.value   = hi;
+        loInp.value = lo;
+        hiInp.value = hi;
+      }
+      updateBar();
+      card.querySelectorAll(`[data-seg="tw-${q}"] button`).forEach(x => x.classList.toggle('on', x.dataset.w === v));
+      drawCard(q);
+    });
+  });
+  // start / end number inputs
+  startInp.addEventListener('change', e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v)) {
+      sc.timeStart = v;
+      loInp.value = Math.max(ext.lo, Math.min(v, ext.hi));
+      if (sc.timeEnd == null) { sc.timeEnd = ext.hi; endInp.value = ext.hi; hiInp.value = ext.hi; }
+      updateBar();
+      card.querySelectorAll(`[data-seg="tw-${q}"] button`).forEach(x => x.classList.remove('on'));
+      drawCard(q);
+    } else {
+      // empty → "all"
+      sc.timeStart = null;
+      loInp.value = ext.lo;
+      updateBar();
+      drawCard(q);
+    }
+  });
+  endInp.addEventListener('change', e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v)) {
+      sc.timeEnd = v;
+      hiInp.value = Math.max(ext.lo, Math.min(v, ext.hi));
+      if (sc.timeStart == null) { sc.timeStart = ext.lo; startInp.value = ext.lo; loInp.value = ext.lo; }
+      updateBar();
+      card.querySelectorAll(`[data-seg="tw-${q}"] button`).forEach(x => x.classList.remove('on'));
+      drawCard(q);
+    } else {
+      sc.timeEnd = null;
+      hiInp.value = ext.hi;
+      updateBar();
+      drawCard(q);
+    }
+  });
+  // range-slider drag
+  loInp.addEventListener('input', () => {
+    if (parseFloat(loInp.value) > parseFloat(hiInp.value) - parseFloat(loInp.step)) {
+      loInp.value = parseFloat(hiInp.value) - parseFloat(loInp.step);
+    }
+    commitFromSlider();
+  });
+  hiInp.addEventListener('input', () => {
+    if (parseFloat(hiInp.value) < parseFloat(loInp.value) + parseFloat(hiInp.step)) {
+      hiInp.value = parseFloat(loInp.value) + parseFloat(hiInp.step);
+    }
+    commitFromSlider();
+  });
+
+  card.querySelector(`[data-aspect="${q}"]`).addEventListener('change', e => {
+    sc.aspect = e.target.value;
+    drawCard(q);
+  });
+  card.querySelector(`[data-format="${q}"]`).addEventListener('change', e => {
+    sc.format = e.target.value;
+  });
+  card.querySelector(`[data-fontbtn="${q}"]`).addEventListener('click', e => openFontPop(e.currentTarget));
+  card.querySelector(`[data-dl="${q}"]`).addEventListener('click', () => downloadPlot('plot-' + q, q, t('plot_' + QUANTITY_NAME[q])));
+  card.querySelector(`[data-csv-data="${q}"]`).addEventListener('click', () => downloadDataCSV(q));
+  card.querySelector(`[data-csv-stats="${q}"]`).addEventListener('click', () => downloadStatsCSV(q));
+  return card;
+}
+
+function drawCard(q) {
+  const el = document.getElementById('plot-' + q);
+  if (!el) return;
+  // overlay mode was removed in v1.2 — side-by-side is the only layout
+  renderSideBySide(q, el);
+  const s = document.getElementById('stats-' + q);
+  if (s) renderQuantityStats(q, s);
+}
+
+function buildCompareCard() {
+  const card = document.createElement('div');
+  card.className = 'plot-card';
+  // Helpers used to (re)render the dynamic series rows and sample pills.
+  const renderSeriesList = () => {
+    const list = card.querySelector('#cmpSeriesList');
+    if (!list) return;
+    const seriesList = state.compare.series;
+    list.innerHTML = seriesList.map((s, idx) => `
+      <div class="cmp-series-row" data-idx="${idx}">
+        <span class="cmp-series-tag" style="--tag-color:${COMPARE_SERIES_COLORS[idx]}">Y${idx+1}</span>
+        <select class="select-mini cmp-q" data-idx="${idx}">
+          <option value="V"${s.quantity==='V'?' selected':''}>V</option>
+          <option value="I"${s.quantity==='I'?' selected':''}>I</option>
+          <option value="Q"${s.quantity==='Q'?' selected':''}>Q</option>
+        </select>
+        <select class="select-mini cmp-m" data-idx="${idx}">
+          <option value="max_peak"${s.metric==='max_peak'?' selected':''}>${t('max_peak')}</option>
+          <option value="mean_peak"${s.metric==='mean_peak'?' selected':''}>${t('mean_peak')}</option>
+          <option value="peak_to_peak"${s.metric==='peak_to_peak'?' selected':''}>${t('peak_to_peak')}</option>
+          <option value="rms"${s.metric==='rms'?' selected':''}>${t('rms')}</option>
+          <option value="mean"${s.metric==='mean'?' selected':''}>${t('mean')}</option>
+          <option value="std"${s.metric==='std'?' selected':''}>${t('std')}</option>
+        </select>
+        <button class="cmp-series-x" data-idx="${idx}" title="${t('remove') || 'remove'}" ${seriesList.length<=1?'disabled':''}>×</button>
+      </div>
+    `).join('');
+    // wire row interactions
+    list.querySelectorAll('.cmp-q').forEach(sel => {
+      sel.addEventListener('change', e => {
+        const i = +e.target.dataset.idx;
+        state.compare.series[i].quantity = e.target.value;
+        renderCompare(document.getElementById('plot-cmp'));
+      });
+    });
+    list.querySelectorAll('.cmp-m').forEach(sel => {
+      sel.addEventListener('change', e => {
+        const i = +e.target.dataset.idx;
+        state.compare.series[i].metric = e.target.value;
+        renderCompare(document.getElementById('plot-cmp'));
+      });
+    });
+    list.querySelectorAll('.cmp-series-x').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const i = +e.currentTarget.dataset.idx;
+        if (state.compare.series.length <= 1) return;
+        state.compare.series.splice(i, 1);
+        renderSeriesList();
+        refreshChartButtons();
+        renderCompare(document.getElementById('plot-cmp'));
+      });
+    });
+    // add-button enabled only when fewer than 3 series
+    const addBtn = card.querySelector('#cmpSeriesAdd');
+    if (addBtn) addBtn.disabled = seriesList.length >= 3;
+  };
+
+  const renderSamplePills = () => {
+    const host = card.querySelector('#cmpSamplePills');
+    if (!host) return;
+    const visible = state.samples.filter(s => s.visible && s.files.length);
+    if (!visible.length) { host.innerHTML = `<span class="muted">${t('no_samples') || '(no samples yet)'}</span>`; return; }
+    const hidden = new Set(state.compare.hiddenSampleIds || []);
+    host.innerHTML = visible.map(s => `
+      <button class="cmp-pill ${hidden.has(s.id)?'':'on'}" data-id="${s.id}" style="--pill-color:${effectiveColor(s)}">${escapeAttr(s.name)}</button>
+    `).join('');
+    host.querySelectorAll('.cmp-pill').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.id;
+        const set = new Set(state.compare.hiddenSampleIds || []);
+        if (set.has(id)) set.delete(id); else set.add(id);
+        state.compare.hiddenSampleIds = [...set];
+        b.classList.toggle('on');
+        renderCompare(document.getElementById('plot-cmp'));
+      });
+    });
+  };
+
+  // Chart-type buttons: keep all four enabled. Bar with multi-series is fine
+  // — it uses Plotly's barmode='group' (Origin-style side-by-side grouped bars).
+  const refreshChartButtons = () => {
+    card.querySelectorAll('#cmpChart button').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('disabled');
+      b.classList.toggle('on', b.dataset.c === state.compare.chart);
+    });
+    refreshSizeFields();
+  };
+
+  // size sliders — show only the relevant one (bar width vs marker size).
+  function refreshSizeFields() {
+    const showBar = state.compare.chart === 'bar';
+    const elBar = card.querySelector('#cmpSizeBar');
+    const elMk  = card.querySelector('#cmpSizeMk');
+    if (elBar) elBar.style.display = showBar ? '' : 'none';
+    if (elMk)  elMk.style.display  = showBar ? 'none' : '';
+  }
+
+  card.innerHTML = `
+    <div class="plot-head">
+      <h3 class="plot-title">${t('compare_title').replace(/(comparison|비교)/, '<em>$1</em>')}</h3>
+      <div class="plot-toolbar">
+        ${aspectSelect2('cmp')}
+        <button class="btn icon" data-fontbtn="cmp" title="${t('fonts')}">A</button>
+        ${formatSelect2('cmp')}
+        <button class="btn icon" data-dl="cmp" title="${t('download')}">⇣</button>
+        <button class="btn icon csv-btn" data-csv-cmp title="${t('csv_stats') || 'stats CSV'}">CSV</button>
+      </div>
+    </div>
+    <div class="compare-controls">
+      <div class="cmp-block">
+        <div class="cmp-block-label">${t('series') || 'series'}</div>
+        <div id="cmpSeriesList" class="cmp-series-list"></div>
+        <button id="cmpSeriesAdd" class="btn cmp-series-add">+ ${t('add_series') || 'add series'}</button>
+      </div>
+      <div class="cmp-block">
+        <div class="cmp-block-label">${t('samples') || 'samples'}</div>
+        <div id="cmpSamplePills" class="cmp-sample-pills"></div>
+      </div>
+      <div class="cmp-block cmp-block-row">
+        <span class="field">${t('chart')}:
+          <div class="seg" id="cmpChart">
+            <button data-c="bar">${t('bar')}</button>
+            <button data-c="scatter">${t('scatter')}</button>
+            <button data-c="line_markers">${t('line_markers') || 'line+markers'}</button>
+            <button data-c="line">${t('line') || 'line'}</button>
+          </div>
+        </span>
+        <span class="field">${t('yscale')}:
+          <div class="seg" id="cmpY">
+            <button data-c="linear" class="${state.compare.yscale==='linear'?'on':''}">${t('linear')}</button>
+            <button data-c="log" class="${state.compare.yscale==='log'?'on':''}">${t('log')}</button>
+          </div>
+        </span>
+        <span class="field" id="cmpSizeBar">${t('bar_width') || 'bar width'}:
+          <input type="range" min="0.2" max="1" step="0.05" value="${state.barWidth}" id="cmpBarW">
+          <span class="muted" id="cmpBarWv">${state.barWidth.toFixed(2)}</span>
+        </span>
+        <span class="field" id="cmpSizeMk">${t('marker_size') || 'marker size'}:
+          <input type="range" min="4" max="30" step="1" value="${state.markerSize}" id="cmpMkS">
+          <span class="muted" id="cmpMkSv">${state.markerSize}</span>
+        </span>
+      </div>
+    </div>
+    <div class="plot-body" id="plot-cmp"></div>
+  `;
+
+  // populate dynamic bits
+  renderSeriesList();
+  renderSamplePills();
+  refreshChartButtons();
+
+  // add-series button
+  card.querySelector('#cmpSeriesAdd').addEventListener('click', () => {
+    if (state.compare.series.length >= 3) return;
+    state.compare.series.push({
+      id: 'cmp_s' + (state.compare.series.length + 1),
+      quantity: 'V',
+      metric: 'max_peak',
+    });
+    renderSeriesList();
+    refreshChartButtons();
+    renderCompare(document.getElementById('plot-cmp'));
+  });
+
+  // chart-type seg
+  card.querySelectorAll('#cmpChart button').forEach(b => {
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      state.compare.chart = b.dataset.c;
+      refreshChartButtons();
+      renderCompare(document.getElementById('plot-cmp'));
+    });
+  });
+
+  // yscale seg
+  card.querySelectorAll('#cmpY button').forEach(b => {
+    b.addEventListener('click', () => {
+      state.compare.yscale = b.dataset.c;
+      card.querySelectorAll('#cmpY button').forEach(x => x.classList.toggle('on', x.dataset.c === state.compare.yscale));
+      renderCompare(document.getElementById('plot-cmp'));
+    });
+  });
+
+  // sliders
+  const bw = card.querySelector('#cmpBarW');
+  bw.addEventListener('input', () => {
+    state.barWidth = parseFloat(bw.value);
+    card.querySelector('#cmpBarWv').textContent = state.barWidth.toFixed(2);
+    renderCompare(document.getElementById('plot-cmp'));
+  });
+  const ms = card.querySelector('#cmpMkS');
+  ms.addEventListener('input', () => {
+    state.markerSize = parseInt(ms.value, 10);
+    card.querySelector('#cmpMkSv').textContent = state.markerSize;
+    renderCompare(document.getElementById('plot-cmp'));
+  });
+
+  // toolbar
+  card.querySelector(`[data-aspect="cmp"]`).addEventListener('change', e => {
+    state.cards.cmp.aspect = e.target.value;
+    renderCompare(document.getElementById('plot-cmp'));
+  });
+  card.querySelector(`[data-format="cmp"]`).addEventListener('change', e => state.cards.cmp.format = e.target.value);
+  card.querySelector(`[data-fontbtn="cmp"]`).addEventListener('click', e => openFontPop(e.currentTarget));
+  card.querySelector(`[data-dl="cmp"]`).addEventListener('click', () => downloadPlot('plot-cmp', 'cmp', t('compare_title')));
+  card.querySelector('[data-csv-cmp]').addEventListener('click', () => downloadCompareStatsCSV());
+  return card;
+}
+
+function buildDualCard() {
+  const card = document.createElement('div');
+  card.className = 'plot-card';
+  if (!state.cards.dual.sampleId && state.samples.length) state.cards.dual.sampleId = state.samples[0].id;
+  // build a time extent for whichever sample is selected
+  const sample = state.samples.find(s => s.id === state.cards.dual.sampleId);
+  let dLo = Infinity, dHi = -Infinity;
+  if (sample) {
+    sample.files.forEach(f => {
+      if ((f.type === 'V' || f.type === 'I') && f.t.length) {
+        if (f.t[0] < dLo) dLo = f.t[0];
+        if (f.t[f.t.length-1] > dHi) dHi = f.t[f.t.length-1];
+      }
+    });
+  }
+  if (!isFinite(dLo) || !isFinite(dHi) || dHi <= dLo) { dLo = 0; dHi = 1; }
+  const dc = state.cards.dual;
+  const isAll = (dc.timeStart == null && dc.timeEnd == null);
+  const tStart = (dc.timeStart != null) ? dc.timeStart : dLo;
+  const tEnd   = (dc.timeEnd   != null) ? dc.timeEnd   : dHi;
+  const span = Math.max(dHi - dLo, 1e-9);
+  const step = span > 100 ? 0.5 : span > 10 ? 0.1 : span > 1 ? 0.01 : 0.001;
+  const fmtT = v => isFinite(v) ? (Math.abs(v) >= 1000 ? v.toExponential(3) : v.toFixed(step < 0.01 ? 4 : step < 0.1 ? 3 : 2)) : '—';
+
+  card.innerHTML = `
+    <div class="plot-head">
+      <h3 class="plot-title">${t('dual_yaxis_title').replace(/(dual axis|듀얼 축 오버레이)/, '<em>$1</em>')}</h3>
+      <div class="plot-toolbar">
+        <span class="muted" style="margin-right:6px;">${t('dual_pick_sample')}</span>
+        <select class="select-mini" id="dualSample">
+          ${state.samples.map(s => `<option value="${s.id}" ${s.id===state.cards.dual.sampleId?'selected':''}>${escapeAttr(s.name)}</option>`).join('')}
+        </select>
+        ${aspectSelect2('dual')}
+        <button class="btn icon" data-fontbtn="dual" title="${t('fonts')}">A</button>
+        ${formatSelect2('dual')}
+        <button class="btn icon" data-dl="dual" title="${t('download')}">⇣</button>
+      </div>
+    </div>
+    <div class="muted" style="margin-bottom:10px;">${t('dual_hint')}</div>
+
+    <div class="time-controls">
+      <div class="tc-row1">
+        <span class="tc-label">${t('time_window') || 'time range'}</span>
+        <div class="tc-inputs">
+          <span class="tc-mini-label">${t('start') || 'start'}</span>
+          <input type="number" class="tc-input" data-tw-start="dual" step="${step}" value="${isAll ? '' : tStart}" placeholder="${fmtT(dLo)}" />
+          <span class="tc-dash">→</span>
+          <span class="tc-mini-label">${t('end') || 'end'}</span>
+          <input type="number" class="tc-input" data-tw-end="dual" step="${step}" value="${isAll ? '' : tEnd}" placeholder="${fmtT(dHi)}" />
+          <span class="tc-unit">s</span>
+        </div>
+        <div class="seg" data-seg="tw-dual">
+          <button data-w="2">+2s</button>
+          <button data-w="5">+5s</button>
+          <button data-w="10">+10s</button>
+          <button data-w="all" class="${isAll?'on':''}">${t('all') || 'all'}</button>
+        </div>
+      </div>
+      <div class="tc-row2">
+        <div class="range-slider" data-rs="dual">
+          <div class="rs-track"></div>
+          <div class="rs-range" data-rs-range></div>
+          <input type="range" class="rs-input rs-lo" data-rs-lo="dual" min="${dLo}" max="${dHi}" step="${step}" value="${tStart}">
+          <input type="range" class="rs-input rs-hi" data-rs-hi="dual" min="${dLo}" max="${dHi}" step="${step}" value="${tEnd}">
+        </div>
+        <span class="tc-hint">data: ${fmtT(dLo)} → ${fmtT(dHi)} s</span>
+      </div>
+    </div>
+
+    <div class="plot-body" id="plot-dual"></div>
+  `;
+
+  // wire range slider
+  const sliderEl = card.querySelector('[data-rs="dual"]');
+  const rangeBar = sliderEl.querySelector('[data-rs-range]');
+  const loInp = card.querySelector('[data-rs-lo="dual"]');
+  const hiInp = card.querySelector('[data-rs-hi="dual"]');
+  const startInp = card.querySelector('[data-tw-start="dual"]');
+  const endInp   = card.querySelector('[data-tw-end="dual"]');
+  function updateBar() {
+    const min = parseFloat(loInp.min), max = parseFloat(loInp.max);
+    const lo = parseFloat(loInp.value), hi = parseFloat(hiInp.value);
+    const a = ((lo - min) / (max - min)) * 100;
+    const b = ((hi - min) / (max - min)) * 100;
+    rangeBar.style.left = a + '%';
+    rangeBar.style.width = Math.max(0, b - a) + '%';
+  }
+  function commit() {
+    let lo = parseFloat(loInp.value), hi = parseFloat(hiInp.value);
+    if (lo > hi - parseFloat(loInp.step)) lo = hi - parseFloat(loInp.step);
+    loInp.value = lo;
+    dc.timeStart = lo;
+    dc.timeEnd   = hi;
+    startInp.value = lo;
+    endInp.value   = hi;
+    updateBar();
+    const dur = hi - lo;
+    card.querySelectorAll('[data-seg="tw-dual"] button').forEach(b => {
+      const v = b.dataset.w;
+      b.classList.toggle('on', v !== 'all' && Math.abs(parseFloat(v) - dur) < 1e-6);
+    });
+    renderDual(document.getElementById('plot-dual'));
+  }
+  updateBar();
+  loInp.addEventListener('input', () => {
+    if (parseFloat(loInp.value) > parseFloat(hiInp.value) - parseFloat(loInp.step)) {
+      loInp.value = parseFloat(hiInp.value) - parseFloat(loInp.step);
+    }
+    commit();
+  });
+  hiInp.addEventListener('input', () => {
+    if (parseFloat(hiInp.value) < parseFloat(loInp.value) + parseFloat(hiInp.step)) {
+      hiInp.value = parseFloat(loInp.value) + parseFloat(hiInp.step);
+    }
+    commit();
+  });
+  startInp.addEventListener('change', e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v)) {
+      dc.timeStart = v;
+      loInp.value = Math.max(dLo, Math.min(v, dHi));
+      if (dc.timeEnd == null) { dc.timeEnd = dHi; endInp.value = dHi; hiInp.value = dHi; }
+      updateBar();
+      card.querySelectorAll('[data-seg="tw-dual"] button').forEach(x => x.classList.remove('on'));
+      renderDual(document.getElementById('plot-dual'));
+    } else {
+      dc.timeStart = null; loInp.value = dLo; updateBar(); renderDual(document.getElementById('plot-dual'));
+    }
+  });
+  endInp.addEventListener('change', e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v)) {
+      dc.timeEnd = v;
+      hiInp.value = Math.max(dLo, Math.min(v, dHi));
+      if (dc.timeStart == null) { dc.timeStart = dLo; startInp.value = dLo; loInp.value = dLo; }
+      updateBar();
+      card.querySelectorAll('[data-seg="tw-dual"] button').forEach(x => x.classList.remove('on'));
+      renderDual(document.getElementById('plot-dual'));
+    } else {
+      dc.timeEnd = null; hiInp.value = dHi; updateBar(); renderDual(document.getElementById('plot-dual'));
+    }
+  });
+  card.querySelectorAll('[data-seg="tw-dual"] button').forEach(b => {
+    b.addEventListener('click', () => {
+      const v = b.dataset.w;
+      if (v === 'all') {
+        dc.timeStart = null; dc.timeEnd = null;
+        startInp.value = ''; endInp.value = '';
+        loInp.value = dLo; hiInp.value = dHi;
+      } else {
+        const dur = parseFloat(v);
+        const lo = (dc.timeStart != null) ? dc.timeStart : dLo;
+        const hi = Math.min(lo + dur, dHi);
+        dc.timeStart = lo; dc.timeEnd = hi;
+        startInp.value = lo; endInp.value = hi;
+        loInp.value = lo; hiInp.value = hi;
+      }
+      updateBar();
+      card.querySelectorAll('[data-seg="tw-dual"] button').forEach(x => x.classList.toggle('on', x.dataset.w === v));
+      renderDual(document.getElementById('plot-dual'));
+    });
+  });
+
+  card.querySelector('#dualSample').addEventListener('change', e => {
+    state.cards.dual.sampleId = e.target.value;
+    // reset window when sample changes
+    state.cards.dual.timeStart = null;
+    state.cards.dual.timeEnd = null;
+    render();   // rebuild so the slider rescales to the new sample's extent
+  });
+  card.querySelector(`[data-aspect="dual"]`).addEventListener('change', e => {
+    state.cards.dual.aspect = e.target.value;
+    renderDual(document.getElementById('plot-dual'));
+  });
+  card.querySelector(`[data-format="dual"]`).addEventListener('change', e => state.cards.dual.format = e.target.value);
+  card.querySelector(`[data-fontbtn="dual"]`).addEventListener('click', e => openFontPop(e.currentTarget));
+  card.querySelector(`[data-dl="dual"]`).addEventListener('click', () => downloadPlot('plot-dual', 'dual', t('dual_yaxis_title')));
+  return card;
+}
+
+function aspectSelect(q) {
+  const opts = ['4:3','16:9','3:2','1:1','5:4'];
+  return `<select class="select-mini" data-aspect="${q}">${opts.map(o => `<option ${o===state.cards[q].aspect?'selected':''}>${o}</option>`).join('')}</select>`;
+}
+function formatSelect(q) {
+  const opts = ['png','svg','jpeg'];
+  return `<select class="select-mini" data-format="${q}">${opts.map(o => `<option ${o===state.cards[q].format?'selected':''}>${o.toUpperCase()}</option>`).join('')}</select>`;
+}
+function aspectSelect2(key) {
+  const opts = ['4:3','16:9','3:2','1:1','5:4'];
+  return `<select class="select-mini" data-aspect="${key}">${opts.map(o => `<option ${o===state.cards[key].aspect?'selected':''}>${o}</option>`).join('')}</select>`;
+}
+function formatSelect2(key) {
+  const opts = ['png','svg','jpeg'];
+  return `<select class="select-mini" data-format="${key}">${opts.map(o => `<option ${o===state.cards[key].format?'selected':''}>${o.toUpperCase()}</option>`).join('')}</select>`;
+}
+
+function openFontPop(anchor) {
+  document.querySelectorAll('.font-pop').forEach(p => p.remove());
+  const pop = document.createElement('div');
+  pop.className = 'font-pop';
+  pop.innerHTML = `
+    <h4>${t('fonts')}</h4>
+    <div class="slider-row">
+      <label>${t('axis_title')} <span>${state.fonts.axisTitle}</span></label>
+      <input type="range" min="6" max="60" value="${state.fonts.axisTitle}" data-f="axisTitle">
+    </div>
+    <div class="slider-row">
+      <label>${t('tick_label')} <span>${state.fonts.tickLabel}</span></label>
+      <input type="range" min="6" max="48" value="${state.fonts.tickLabel}" data-f="tickLabel">
+    </div>
+    <div class="slider-row">
+      <label>${t('legend')} <span>${state.fonts.legend}</span></label>
+      <input type="range" min="6" max="48" value="${state.fonts.legend}" data-f="legend">
+    </div>
+    <button class="btn primary" style="width:100%;">${t('apply_all')}</button>
+  `;
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.max(8, r.left - 120 + window.scrollX) + 'px';
+  pop.style.top  = (r.bottom + 6 + window.scrollY) + 'px';
+  pop.querySelectorAll('input[type="range"]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      state.fonts[e.target.dataset.f] = +e.target.value;
+      e.target.previousElementSibling.querySelector('span').textContent = e.target.value;
+      redrawAll();
+    });
+  });
+  pop.querySelector('button').addEventListener('click', () => pop.remove());
+  const close = (ev) => {
+    if (!pop.contains(ev.target) && !anchor.contains(ev.target)) {
+      pop.remove(); document.removeEventListener('mousedown', close, true);
+    }
+  };
+  setTimeout(() => document.addEventListener('mousedown', close, true), 0);
+}
+
+function applyPlotScale() {
+  // size every plot-card to a fraction of the available main-column width.
+  // Using max-width preserves the aspect-ratio math in aspectH() — narrower
+  // container → smaller height → less vertical scrolling.
+  // The sticky-legend card has its own fixed width via the media-query rules,
+  // so we don't touch it here.
+  const pct = Math.round(state.plotScale * 100);
+  document.querySelectorAll('#plotsHost .plot-card').forEach(c => {
+    if (c.classList.contains('legend-card-fixed')) return;
+    c.style.maxWidth = pct + '%';
+  });
+}
+
+/* main render */
+function render() {
+  renderSidebar();
+  const host = document.getElementById('plotsHost');
+  const hasAny = state.samples.some(s => s.files.length > 0);
+  if (!hasAny) {
+    host.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'card empty';
+    empty.innerHTML = `
+      <div class="glyph">⌁</div>
+      <h3>${t('empty_title').replace('signals','<em>signals</em>').replace('신호','<em>신호</em>')}</h3>
+      <p>${t('empty_body')}</p>
+    `;
+    host.appendChild(empty);
+    return;
+  }
+  host.innerHTML = '';
+  // sample legend (small standalone "key" figure) — sticky top-right on desktop
+  const hasVisible = state.samples.some(s => s.visible && s.files.length);
+  host.classList.toggle('has-sticky-legend', hasVisible);
+  if (hasVisible) {
+    host.appendChild(buildLegendCard());
+  }
+  ['V', 'I', 'Q'].forEach(q => {
+    const has = state.samples.some(s => s.visible && s.files.some(f => f.type === q));
+    if (!has) return;
+    host.appendChild(buildQuantityCard(q));
+  });
+  host.appendChild(buildCompareCard());
+
+  // dual card only if any sample has both V and I
+  const dualEligible = state.samples.some(s =>
+    s.files.some(f => f.type === 'V') && s.files.some(f => f.type === 'I')
+  );
+  if (dualEligible) host.appendChild(buildDualCard());
+
+  // size all cards according to the global plotScale BEFORE we draw, so each
+  // container.clientWidth reflects the final width.
+  applyPlotScale();
+
+  // draw
+  if (document.getElementById('plot-legend')) renderSampleLegend(document.getElementById('plot-legend'));
+  ['V', 'I', 'Q'].forEach(q => {
+    if (document.getElementById('plot-' + q)) drawCard(q);
+  });
+  if (document.getElementById('plot-cmp')) renderCompare(document.getElementById('plot-cmp'));
+  if (document.getElementById('plot-dual')) renderDual(document.getElementById('plot-dual'));
+}
+
+function redrawAll() {
+  if (document.getElementById('plot-legend')) renderSampleLegend(document.getElementById('plot-legend'));
+  ['V','I','Q'].forEach(q => {
+    if (document.getElementById('plot-' + q)) drawCard(q);
+  });
+  if (document.getElementById('plot-cmp')) renderCompare(document.getElementById('plot-cmp'));
+  if (document.getElementById('plot-dual')) renderDual(document.getElementById('plot-dual'));
+}
+
+/* ───────────────────────── CSV EXPORTS (currently-shown data + stats) ─────────────────────────
+   Two flavors per quantity:
+     downloadDataCSV(q)   → the (t, value) series shown in the plot, in the chosen display unit,
+                            clipped to the active time window.  Wide layout: each visible file
+                            gets a pair of columns "t (s) — sample·file" and "value (unit)".
+                            Time columns are NOT merged across files (different files often
+                            have different time grids).
+     downloadStatsCSV(q)  → one row per visible file with all six stats + duration.
+                            Computed on the FULL signal (not the windowed view) so it matches
+                            the on-screen stats panel.
+   Both are saved as standards-compliant CSV with quoted fields. */
+function downloadText(text, name, mime = 'text/csv;charset=utf-8') {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function csvField(v) {
+  // quote fields that contain delimiter / quote / newline — and quote everything else too
+  // for simplicity (Excel-friendly).
+  const s = (v == null) ? '' : String(v);
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
+function downloadDataCSV(quantity) {
+  const tw = resolveTimeWindow(quantity);
+  const displayUnit = chooseDisplayUnit(quantity);
+  const items = [];
+  state.samples.forEach(s => {
+    if (!s.visible) return;
+    s.files.forEach(f => {
+      if (f.type !== quantity) return;
+      const sliced = sliceByTime(f.t, f.y, tw.lo, tw.hi);
+      if (!sliced.t.length) return;
+      const y = siToDisplay(quantity, sliced.y, displayUnit, f.invert);
+      items.push({ s, f, t: sliced.t, y });
+    });
+  });
+  if (!items.length) { toast(t('no_data')); return; }
+  // wide layout: 2 columns per item (its own time + value)
+  const header = [];
+  items.forEach(it => {
+    header.push(`t (s) — ${it.s.name} · ${it.f.name}`);
+    header.push(`${it.s.name} · ${it.f.name} (${displayUnit})`);
+  });
+  const maxLen = items.reduce((m, it) => Math.max(m, it.t.length), 0);
+  const lines = [ header.map(csvField).join(',') ];
+  for (let i = 0; i < maxLen; i++) {
+    const row = [];
+    items.forEach(it => {
+      if (i < it.t.length) { row.push(it.t[i]); row.push(it.y[i]); }
+      else                 { row.push('');     row.push('');     }
+    });
+    lines.push(row.map(csvField).join(','));
+  }
+  downloadText(lines.join('\n'), `electroplot_${quantity}_data.csv`);
+  toast(`${quantity} data CSV (${items.length} files)`);
+}
+
+function downloadStatsCSV(quantity) {
+  const displayUnit = chooseDisplayUnit(quantity);
+  const rows = [[
+    'sample', 'file', 'unit',
+    'max_peak', 'mean_peak', 'peak_to_peak', 'rms', 'mean', 'std',
+    'duration (s)',
+  ]];
+  state.samples.forEach(s => {
+    if (!s.visible) return;
+    s.files.forEach(f => {
+      if (f.type !== quantity) return;
+      if (!f.t.length) return;
+      const y = siToDisplay(quantity, f.y, displayUnit, f.invert);
+      const st = fileStats(y);
+      if (!st) return;
+      const dur = f.t[f.t.length - 1] - f.t[0];
+      rows.push([s.name, f.name, displayUnit, st.max_peak, st.mean_peak, st.peak_to_peak, st.rms, st.mean, st.std, dur]);
+    });
+  });
+  if (rows.length < 2) { toast(t('no_data')); return; }
+  const csv = rows.map(r => r.map(csvField).join(',')).join('\n');
+  downloadText(csv, `electroplot_${quantity}_stats.csv`);
+  toast(`${quantity} stats CSV (${rows.length - 1} files)`);
+}
+
+/* Comparison-card export: every metric, for every visible file, at the active
+   display unit of that quantity. Wider than per-quantity stats since this one
+   has columns for all six stats from a single combined view. */
+function downloadCompareStatsCSV() {
+  const seriesList = (state.compare.series || []).slice(0, 3);
+  if (!seriesList.length) { toast(t('no_data'), 'danger'); return; }
+  const hidden = new Set(state.compare.hiddenSampleIds || []);
+  const samples = state.samples.filter(s => s.visible && s.files.length && !hidden.has(s.id));
+  if (!samples.length) { toast(t('no_data'), 'danger'); return; }
+
+  // header: sample, then one column per series labelled "<Metric Quantity> (unit)"
+  const colTitles = seriesList.map(s => {
+    const u = chooseDisplayUnit(s.quantity);
+    return compareSeriesLabel(s.quantity, s.metric, u);
+  });
+  const header = ['sample', ...colTitles].map(c => `"${c}"`).join(',');
+
+  const rows = [header];
+  samples.forEach(samp => {
+    const cells = [`"${samp.name.replace(/"/g, '""')}"`];
+    seriesList.forEach(s => {
+      const q = s.quantity, m = s.metric;
+      const u = chooseDisplayUnit(q);
+      const tw = resolveTimeWindow(q);
+      const files = samp.files.filter(f => f.type === q);
+      const vals = [];
+      files.forEach(f => {
+        const sliced = sliceByTime(f.t, f.y, tw.lo, tw.hi);
+        if (!sliced.t.length) return;
+        const yDisp = siToDisplay(q, sliced.y, u, f.invert);
+        const st = fileStats(yDisp);
+        if (st && Number.isFinite(st[m])) vals.push(st[m]);
+      });
+      cells.push(vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toString() : '');
+    });
+    rows.push(cells.join(','));
+  });
+
+  downloadText(rows.join('\n'), `electroplot_compare_stats.csv`, 'text/csv;charset=utf-8');
+  toast(t('csv_exported'));
+}
+
+/* ───────────────────────── DOWNLOAD ─────────────────────────
+   The exported PNG / SVG / JPEG now uses the EXACT on-screen dimensions of
+   the plot element. That means the plotScale slider in the display options
+   actually drives the file size too — what you see in the app is what you
+   get in the file. A scale multiplier is applied for high-DPI crispness
+   (so a 600×400 on-screen plot saves as ~1875×1250 pixels). */
+async function downloadPlot(id, key, _title) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const cardKey = key === 'plot-cmp' ? 'cmp' : key;
+  const fmt = (state.cards[cardKey]?.format) || (state.cards[key]?.format) || 'png';
+  // Pull the on-screen dimensions. clientWidth/clientHeight reflect the
+  // current rendered size including all CSS sizing (plotScale, card max-width,
+  // aspect-driven height). Guard against zero in case the element is hidden.
+  const w = Math.max(200, el.clientWidth  || 800);
+  const h = Math.max(150, el.clientHeight || 600);
+  // High-DPI multiplier for crisp print output (~3× → close to 300 dpi at 96 css px/in).
+  const scale = 3;
+  const filename = key === 'legend' ? 'electroplot_legend' : `electroplot_${key}`;
+  try {
+    await Plotly.downloadImage(el, { format: fmt, width: w, height: h, scale, filename });
+    toast(t('plot_exported'));
+  } catch (e) {
+    console.error(e);
+    toast(t('no_data'), 'danger');
+  }
+}
+
+function exportAllCsv() {
+  let any = false;
+  state.samples.forEach(sample => {
+    ['V','I','Q'].forEach(q => {
+      const fs = sample.files.filter(f => f.type === q);
+      if (!fs.length) return;
+      any = true;
+      const baseU = q === 'V' ? 'V' : (q === 'I' ? 'A' : 'C');
+      const header = ['t_s', ...fs.map(f => `${f.name}_${q}_${baseU}${f.invert?'_inverted':''}`)];
+      const maxLen = Math.max(...fs.map(f => f.t.length));
+      const rows = [header.join(',')];
+      for (let i = 0; i < maxLen; i++) {
+        const row = [];
+        row.push(fs[0].t[i] ?? '');
+        fs.forEach(f => {
+          const v = f.y[i];
+          row.push(typeof v === 'number' ? (f.invert ? -v : v) : '');
+        });
+        rows.push(row.join(','));
+      }
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sample.name.replace(/\s+/g,'_')}_${q}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    });
+  });
+  if (any) toast(t('csv_exported')); else toast(t('no_data'), 'danger');
+}
+
+/* ───────────────────────── WIRING ───────────────────────── */
+function wire() {
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('ep_theme', state.theme);
+    applyTheme();
+  });
+  document.getElementById('langToggle').addEventListener('click', () => {
+    state.lang = state.lang === 'en' ? 'ko' : 'en';
+    localStorage.setItem('ep_lang', state.lang);
+    applyLang();
+  });
+  document.getElementById('exportAllCsv').addEventListener('click', exportAllCsv);
+  document.getElementById('saveSession').addEventListener('click', saveSession);
+  document.getElementById('resetAll').addEventListener('click', () => {
+    if (confirm(t('confirm_reset'))) {
+      state.samples = [];
+      state.activeSampleId = null;
+      state.cards.dual.sampleId = null;
+      render();
+    }
+  });
+  document.querySelectorAll('.qty-tab').forEach(el => {
+    el.addEventListener('click', () => { state.uploadQty = el.dataset.qty; renderSidebar(); });
+  });
+  document.getElementById('addSample').addEventListener('click', () => { addSample(); render(); });
+
+  // dropzone — ignores internal "drag file row between samples" drags
+  const dz = document.getElementById('dropzone');
+  const fi = document.getElementById('fileInput');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => {
+    if (e.dataTransfer.types.includes('application/x-electroplot-file')) return;
+    e.preventDefault();
+    dz.classList.add('over');
+  });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => {
+    if (e.dataTransfer.types.includes('application/x-electroplot-file')) return;
+    e.preventDefault();
+    dz.classList.remove('over');
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+  fi.addEventListener('change', () => { if (fi.files.length) { handleFiles(fi.files); fi.value=''; } });
+
+  // line width
+  const lw = document.getElementById('lineWidth');
+  lw.addEventListener('input', () => {
+    state.lineWidth = parseFloat(lw.value);
+    document.getElementById('lineWidthV').textContent = state.lineWidth.toFixed(2);
+    redrawAll();
+  });
+
+  // plot size — scales every .plot-card via max-width so its inner .plot-body shrinks too
+  const ps = document.getElementById('plotScale');
+  ps.value = state.plotScale;
+  document.getElementById('plotScaleV').textContent = Math.round(state.plotScale * 100) + '%';
+  ps.addEventListener('input', () => {
+    state.plotScale = parseFloat(ps.value);
+    document.getElementById('plotScaleV').textContent = Math.round(state.plotScale * 100) + '%';
+    applyPlotScale();
+    redrawAll();   // re-measure container.clientWidth at the new size
+  });
+
+  // toggles
+  const wireToggle = (id, prop) => {
+    const el = document.getElementById(id);
+    el.addEventListener('click', () => {
+      state[prop] = !state[prop];
+      el.classList.toggle('on', state[prop]);
+      redrawAll();
+    });
+  };
+  wireToggle('bareBg', 'bareBg');
+  wireToggle('showGrid', 'showGrid');
+  wireToggle('showAxes', 'showAxes');
+  wireToggle('showMirror', 'showMirror');
+  wireToggle('smoothLines', 'smoothLines');
+
+  // sync initial toggle visuals to state (because defaults changed in pub style)
+  ['bareBg','showGrid','showAxes','showMirror','smoothLines'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', !!state[id]);
+  });
+
+  // resize
+  let to;
+  window.addEventListener('resize', () => { clearTimeout(to); to = setTimeout(redrawAll, 120); });
+}
+
+/* ───────────────────────── SAVED SESSIONS ─────────────────────────
+   A "saved session" is a copy of THIS html file with a JSON blob embedded in
+   the <script id="electroplot-saved-state"> element. The JSON encodes the
+   user's samples + per-card settings (per-card windows, units, aspect, format,
+   compare-card config). Global appearance — fonts, plotScale, line width,
+   bare-bg, grid/axis toggles, smoothing, bar/marker size — is intentionally
+   NOT saved, so when the file is reopened the look adapts to current defaults.
+
+   Save flow:
+     - Build a JSON blob of `state.samples` + the safe subset of `state.cards`
+       + `state.compare`.
+     - Take a snapshot of the HTML captured at PAGE LOAD (so dynamic Plotly
+       canvases & per-render DOM mutations don't pollute the saved file).
+     - Replace the empty placeholder script with the JSON.
+     - Download as `electroplot_session_<timestamp>.html`.
+
+   Load flow (two paths):
+     1. The saved HTML is opened directly in a browser.  At init, the script
+        reads its own `#electroplot-saved-state` element and hydrates the app
+        if non-empty.
+     2. The saved HTML is dragged onto the upload zone of a running app.
+        `handleFiles` detects an .html file containing the marker, extracts
+        the JSON, and calls `loadSavedSession(...)` which asks the user
+        replace / merge / cancel when there are already samples in the app. */
+
+// captured immediately on script execution, before render() pollutes the DOM
+const PRISTINE_HTML = document.documentElement.outerHTML;
+
+function buildStateForSave() {
+  // The per-card fields we save (NOT lineWidth / fonts / plotScale / bareBg /
+  // showGrid / showAxes / showMirror / ticksOutward / smoothLines / bar*Size).
+  function trimCard(c, keys) {
+    const out = {};
+    keys.forEach(k => { if (k in c) out[k] = c[k]; });
+    return out;
+  }
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    samples: state.samples.map(s => ({
+      id: s.id, name: s.name, color: s.color, alpha: s.alpha ?? 1, visible: s.visible,
+      files: s.files.map(f => ({
+        id: f.id, name: f.name, type: f.type, unit: f.unit,
+        suggestedUnit: f.suggestedUnit, invert: f.invert,
+        tCol: f.tCol, yCol: f.yCol,
+        // f.parsed has the raw CSV data — keep it so t/y can be re-derived
+        // and so the column picker still has the source columns available.
+        parsed: f.parsed,
+      })),
+    })),
+    cards: {
+      V:      trimCard(state.cards.V,      ['aspect','format','displayUnit','timeStart','timeEnd']),
+      I:      trimCard(state.cards.I,      ['aspect','format','displayUnit','timeStart','timeEnd']),
+      Q:      trimCard(state.cards.Q,      ['aspect','format','displayUnit','timeStart','timeEnd']),
+      cmp:    trimCard(state.cards.cmp,    ['aspect','format']),
+      dual:   trimCard(state.cards.dual,   ['aspect','format','sampleId','timeStart','timeEnd']),
+      legend: trimCard(state.cards.legend, ['format']),
+    },
+    compare: { ...state.compare },
+  };
+}
+
+function applySavedState(saved, mode = 'replace') {
+  if (!saved || !Array.isArray(saved.samples)) return false;
+  // Rebuild sample list with t/y arrays re-derived from `parsed` + tCol/yCol.
+  const newSamples = saved.samples.map(s => ({
+    id: s.id, name: s.name, color: s.color,
+    alpha: (typeof s.alpha === 'number') ? s.alpha : 1,
+    visible: s.visible !== false,
+    files: (s.files || []).map(f => {
+      const parsed = f.parsed || { rows: [], headers: [], ncol: 0 };
+      const tCol = (typeof f.tCol === 'number') ? f.tCol : 0;
+      const yCol = (typeof f.yCol === 'number') ? f.yCol : 1;
+      const ex = (typeof extractCols === 'function')
+        ? extractCols(parsed, tCol, yCol)
+        : { t: [], y: [] };
+      return {
+        id: f.id || uid(),
+        name: f.name,
+        type: f.type || 'V',
+        unit: f.unit || 'SI',
+        suggestedUnit: f.suggestedUnit,
+        invert: !!f.invert,
+        tCol, yCol,
+        parsed,
+        t: ex.t, y: ex.y,
+      };
+    }),
+  }));
+  if (mode === 'merge') {
+    // Give merged samples + files NEW ids so they don't collide with current ones.
+    newSamples.forEach(s => {
+      s.id = uid();
+      s.files.forEach(f => f.id = uid());
+    });
+    state.samples = state.samples.concat(newSamples);
+  } else {
+    state.samples = newSamples;
+  }
+  // Per-card settings: shallow-merge so saved fields overwrite, others retain default
+  if (saved.cards) {
+    for (const k of Object.keys(saved.cards)) {
+      if (state.cards[k]) Object.assign(state.cards[k], saved.cards[k]);
+    }
+  }
+  if (saved.compare) {
+    const c = saved.compare;
+    // Backward-compat: older saves had `compare.quantity` + `compare.metric` and
+    // no `series`. Promote them into the new series array. Also map the old
+    // `chart: 'bar'|'scatter'` values directly; anything else falls through.
+    if (!Array.isArray(c.series) && (c.quantity || c.metric)) {
+      c.series = [{
+        id: 'cmp_s1',
+        quantity: c.quantity || 'V',
+        metric: c.metric || 'max_peak',
+      }];
+    }
+    // Drop the legacy "grouping" field — comparison is now always sample-level.
+    delete c.grouping;
+    delete c.quantity;
+    delete c.metric;
+    Object.assign(state.compare, c);
+    // Ensure the array exists in case the saved object had nothing useful.
+    if (!Array.isArray(state.compare.series) || !state.compare.series.length) {
+      state.compare.series = [{ id: 'cmp_s1', quantity: 'V', metric: 'max_peak' }];
+    }
+    if (!Array.isArray(state.compare.hiddenSampleIds)) state.compare.hiddenSampleIds = [];
+  }
+  state.activeSampleId = state.samples[0]?.id || null;
+  return true;
+}
+
+// Reads the inline <script id="electroplot-saved-state">. Returns true if a
+// non-empty session was loaded.
+function tryHydrateFromInlineState() {
+  const el = document.getElementById('electroplot-saved-state');
+  if (!el) return false;
+  const txt = (el.textContent || '').trim();
+  if (!txt || txt === '{}') return false;
+  try {
+    const saved = JSON.parse(txt);
+    return applySavedState(saved, 'replace');
+  } catch (e) {
+    console.error('saved session parse failed', e);
+    return false;
+  }
+}
+
+function saveSession() {
+  let blob;
+  try {
+    const saved = buildStateForSave();
+    blob = JSON.stringify(saved);
+  } catch (e) {
+    console.error(e); toast('save failed', 'danger'); return;
+  }
+  // Escape any close-script tag that might appear inside a filename/name field.
+  const safe = blob.replace(/<\/script/gi, '<\\/script');
+  const tag = `<script id="electroplot-saved-state" type="application/json">${safe}<\/script>`;
+  // Replace the placeholder in the pristine HTML snapshot. Match either
+  // an empty `{}` form or anything in case a previous session was already loaded.
+  const html = PRISTINE_HTML.replace(
+    /<script id="electroplot-saved-state"[^>]*>[\s\S]*?<\/script>/,
+    tag
+  );
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+  const sizeMB = (html.length / (1024 * 1024)).toFixed(1);
+  downloadText(html, `electroplot_session_${ts}.html`, 'text/html;charset=utf-8');
+  toast(`session saved (${sizeMB} MB)`);
+}
+
+/* Three-button modal for "saved file dropped into an app that already has data".
+   Resolves with one of 'replace' | 'merge' | 'cancel'. */
+function sessionConfirmDialog(meta) {
+  return new Promise(resolve => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'session-modal-backdrop';
+    const nSamples = meta?.nSamples ?? '?';
+    const nFiles = meta?.nFiles ?? '?';
+    const savedAt = meta?.savedAt ? new Date(meta.savedAt).toLocaleString() : 'unknown';
+    backdrop.innerHTML = `
+      <div class="session-modal">
+        <h3>load saved session?</h3>
+        <p class="muted" style="font-size:11px;">${nSamples} sample(s) · ${nFiles} file(s) · saved ${savedAt}</p>
+        <p>your current session has samples in it. how should this be handled?</p>
+        <div class="session-modal-actions">
+          <button class="btn primary" data-act="replace">replace</button>
+          <button class="btn" data-act="merge">merge</button>
+          <button class="btn" data-act="cancel">cancel</button>
+        </div>
+      </div>`;
+    function done(act) {
+      backdrop.remove();
+      document.removeEventListener('keydown', onKey, true);
+      resolve(act);
+    }
+    function onKey(e) { if (e.key === 'Escape') done('cancel'); }
+    backdrop.addEventListener('click', e => {
+      const b = e.target.closest('[data-act]');
+      if (b) done(b.dataset.act);
+      else if (e.target === backdrop) done('cancel');
+    });
+    document.addEventListener('keydown', onKey, true);
+    document.body.appendChild(backdrop);
+  });
+}
+
+/* Extract a saved-session JSON blob from an HTML text payload (a dropped
+   saved file). Returns the parsed object or null. */
+function extractSavedFromHtml(text) {
+  const m = text.match(/<script id="electroplot-saved-state"[^>]*>([\s\S]*?)<\/script>/);
+  if (!m) return null;
+  const raw = m[1].trim();
+  if (!raw || raw === '{}') return null;
+  try {
+    return JSON.parse(raw.replace(/<\\\/script/gi, '<\/script'));
+  } catch (e) {
+    console.error('saved session parse failed (drop)', e);
+    return null;
+  }
+}
+
+/* Called by handleFiles when an .html file is dropped on the upload zone. */
+async function importSavedSession(file) {
+  let text;
+  try { text = await file.text(); } catch { return false; }
+  const saved = extractSavedFromHtml(text);
+  if (!saved) return false;
+  const hasExisting = state.samples.some(s => s.files.length > 0);
+  let mode = 'replace';
+  if (hasExisting) {
+    const nFiles = saved.samples.reduce((a, s) => a + (s.files?.length || 0), 0);
+    mode = await sessionConfirmDialog({
+      nSamples: saved.samples.length,
+      nFiles, savedAt: saved.savedAt,
+    });
+    if (mode === 'cancel') { toast('cancelled'); return true; }
+  }
+  applySavedState(saved, mode);
+  render();
+  toast(`session ${mode === 'merge' ? 'merged' : 'loaded'}`);
+  return true;
+}
+
+/* init */
+wire();
+applyTheme();
+applyLang();
+// If THIS html was opened as a saved session, hydrate the state from the inline JSON.
+// Otherwise begin with a single empty sample so the UI has something to show.
+if (!tryHydrateFromInlineState()) {
+  addSample(true);
+}
+render();
+</script>
+</body>
+</html>
